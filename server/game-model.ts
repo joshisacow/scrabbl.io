@@ -5,6 +5,7 @@ import { Tile, shuffleDeck, possibleBoards } from "./game-statics"
 
 class Board {
   board: Tile[][]
+  size: number
 
   constructor(board: number) {
     for (let i = 0; i < possibleBoards[board].length; i++) {
@@ -13,6 +14,88 @@ class Board {
         this.board[i][j] = tile
       }
     }
+    this.size = possibleBoards[board].length
+  }
+
+  playTile(potentialTiles: Tile[], locations: [number, number][]) {
+    // for (let i = 0; i < potentialTiles.length; i++) {
+    //   this.board[locations[i][0]][locations[i][1]] = potentialTiles[i]
+    // }
+
+    // check if all same row or column
+    let r = locations[0][0]
+    let c = locations[0][1]
+    var direction, perpendicular;
+    for (let i = 0; i < locations.length; i++) {
+      if (locations[i][0] !== r && locations[i][1] !== c) {
+        return "Invalid move"
+      }
+      if (locations[i][1] !== c) {
+        direction = "horizontal"
+        perpendicular = "vertical"
+      } else if (locations[i][0] !== r) {
+        direction = "vertical"
+        perpendicular = "horizontal"
+      }
+    }
+    
+    // check if valid placements + compute scores
+    var score = 0;
+    for (let i = 0; i < locations.length; i++) {
+      let [valid, value] = this.checkTile(potentialTiles[i], locations[i][0], locations[i][1], perpendicular)
+      if (!valid) {
+        return "Invalid move"
+      } else {
+        score += value as number
+      }
+    }
+    let [valid, value] = this.checkTile(potentialTiles[0], locations[0][0], locations[0][1], direction)
+    if (!valid) {
+      return "Invalid move"
+    } else {
+      score += value as number
+    }
+    if (potentialTiles.length >= 7) {
+      score += 50
+    }
+  }
+
+  checkTile(tile: Tile, i: number, j: number, direction: string) {
+    var score, bool;
+    if (direction === "horizontal") {
+      var [l, r] = [j,j]
+      while (l-1 >= 0 && this.board[i][l-1].type === "tile") l--;
+      while (r+1 < this.size && this.board[i][r+1].type === "tile") r++;
+
+      [score, bool] = this.checkWord(i, l, i, r)
+    } else {
+      var [t,b] = [i,i]
+      while (t-1 >= 0 && this.board[t-1][j].type === "tile") t--;
+      while (b+1 < this.size && this.board[b+1][j].type === "tile") b++;
+      [score, bool] = this.checkWord(t, j, b, j)
+    }
+    return [bool, score]
+  }
+
+  checkWord(i1: number, j1: number, i2: number, j2: number) {
+    var word = ""
+    if (i1 === i2 && j1 === j2) {
+      return [0, true]
+    } else if (i1 === i2) {
+      for (let j = j1; j <= j2; j++) {
+        word += this.board[i1][j].letter
+      }
+    } else if (j1 === j2) {
+      for (let i = i1; i <= i2; i++) {
+        word += this.board[i][j1].letter
+      }
+    } else {
+      return [0, false]
+    }
+    
+    // check word -> scrabble api
+
+    return [word, true]
   }
 }
 
@@ -40,7 +123,31 @@ export class GameState {
     this.currentPlayerIndex = Math.floor(Math.random() * playerNames.length)
     this.deck = shuffleDeck()
   }
+
+
+  doAction(action: string, playerIndex: number, tile: Tile = null) {
+    if (playerIndex !== this.currentPlayerIndex) {
+      return "Not your turn"
+    }
+    if (action.action === "draw-card") {
+      this.drawCard(playerIndex)
+    } else if (action.action === "play-card") {
+      this.playCard(action.cardId, playerIndex)
+    }
+  }
+
+
 }
+
+const dealCards = (state: GameState) => {
+  state.players.forEach(player => {
+    for (let i = 0; i < 7; i++) {
+      player.hand.push(state.deck.pop())
+    }
+  })
+}
+
+
 
 
 // export const RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
