@@ -113,10 +113,7 @@ export const shuffleDeck = () => {
 }
 
 // validate words
-import * as path from 'path';
 import fs from 'fs';
-// const scrabbleWordsFile = path.join(__dirname, 'legalWords.txt');
-
 // Load the Scrabble words into a Set
 const legalWords = new Set();
 fs.readFileSync('legalWords.txt', 'utf8')
@@ -124,9 +121,35 @@ fs.readFileSync('legalWords.txt', 'utf8')
     .forEach(word => legalWords.add(word.trim().toUpperCase()));
 
 export const isValidWord = (word: string) => {
-    return legalWords.has(word.toUpperCase());
+    word = word.toUpperCase();
+    if (legalWords.has(word)) {
+        return true;
+    }
 
-    //TODO: add blank tile handling
+    // blank tile handling
+
+    let blankCount = (word.match(/ /g) || []).length;
+    console.log(blankCount, word)
+    if (blankCount === 1) {
+        for (let i = 0; i < 26; i++) {
+            let newWord = word.replace(/ /, String.fromCharCode(65 + i));
+            if (legalWords.has(newWord)) {
+                return true;
+            }
+        }
+    } else if (blankCount === 2) {
+        for (let i = 0; i < 26; i++) {
+            let temp = word.replace(/ /, String.fromCharCode(65 + i));
+            for (let j = 0; j < 26; j++) {
+                let newWord = temp.replace(/ /, String.fromCharCode(65 + j))
+                if (legalWords.has(newWord)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 export const calculateWordScore = (word: string) => {

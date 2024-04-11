@@ -1,7 +1,7 @@
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // // data model for cards and game state
 
-import { Tile, shuffleDeck, possibleBoards } from "./game-statics" 
+import { Tile, shuffleDeck, possibleBoards, isValidWord, letterValues } from "./game-statics" 
 
 class Board {
   board: Tile[][]
@@ -61,41 +61,71 @@ class Board {
   }
 
   checkTile(tile: Tile, i: number, j: number, direction: string) {
-    var score, bool;
+    var score;
     if (direction === "horizontal") {
       var [l, r] = [j,j]
       while (l-1 >= 0 && this.board[i][l-1].type === "tile") l--;
       while (r+1 < this.size && this.board[i][r+1].type === "tile") r++;
-
-      [score, bool] = this.checkWord(i, l, i, r)
+      score = this.checkWord(i, l, i, r)
     } else {
       var [t,b] = [i,i]
       while (t-1 >= 0 && this.board[t-1][j].type === "tile") t--;
       while (b+1 < this.size && this.board[b+1][j].type === "tile") b++;
-      [score, bool] = this.checkWord(t, j, b, j)
+      score = this.checkWord(t, j, b, j)
     }
-    return [bool, score]
+    if (score < 0) {
+      return [false, 0]
+    } else if (score === 0) {
+      return [true, 0]
+    }
+
+    return [true, score]
   }
 
   checkWord(i1: number, j1: number, i2: number, j2: number) {
     var word = ""
+    var score = 0
+    var multiplier = 1
     if (i1 === i2 && j1 === j2) {
-      return [0, true]
+      return 0
     } else if (i1 === i2) {
       for (let j = j1; j <= j2; j++) {
         word += this.board[i1][j].letter
+        score += letterValues[this.board[i1][j].letter]
+        if (this.board[i1][j].type === "2xLS") {
+          score += letterValues[this.board[i1][j].letter]
+        } else if (this.board[i1][j].type === "3xLS") {
+          score += 2 * letterValues[this.board[i1][j].letter]
+        } else if (this.board[i1][j].type === "2xWS") {
+          multiplier *= 2
+        } else if (this.board[i1][j].type === "3xWS") {
+          multiplier *= 3
+        }
       }
     } else if (j1 === j2) {
       for (let i = i1; i <= i2; i++) {
         word += this.board[i][j1].letter
+        score += letterValues[this.board[i][j1].letter]
+        if (this.board[i][j1].type === "2xLS") {
+          score += letterValues[this.board[i][j1].letter]
+        } else if (this.board[i][j1].type === "3xLS") {
+          score += 2 * letterValues[this.board[i][j1].letter]
+        } else if (this.board[i][j1].type === "2xWS") {
+          multiplier *= 2
+        } else if (this.board[i][j1].type === "3xWS") {
+          multiplier *= 3
+        }
       }
     } else {
-      return [0, false]
+      return -1
     }
     
-    // check word -> scrabble api
+    // check word in list
+    if (isValidWord(word)) {
+      return score * multiplier
+    }
+    return -1
 
-    return [word, true]
   }
 }
 
