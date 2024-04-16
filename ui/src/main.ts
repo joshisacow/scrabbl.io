@@ -7,16 +7,28 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 import App from './App.vue'
 import Game from './views/Game.vue'
+import Login from './views/Login.vue'
+
 
 const routes = [
   {
     path: "/",
+    component: Login,
+    // props (route) {
+    //   return {
+    //     playerIndex: route.params.playerIndex
+    //   }
+    // }
+  },
+  {
+    path: "/game",
     component: Game,
     // props (route) {
     //   return {
     //     playerIndex: route.params.playerIndex
     //   }
     // }
+  
   }
 ]
 

@@ -221,7 +221,7 @@ client.connect().then(() => {
     app.get(
       "/login-callback",
       passport.authenticate("oidc", {
-        successRedirect: "/",
+        successRedirect: "/game",
         failureRedirect: "/api/login",
       })
     )    
