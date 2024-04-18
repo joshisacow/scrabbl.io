@@ -1,7 +1,7 @@
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // // data model for cards and game state
 
-import { Tile, shuffleDeck, possibleBoards, isValidWord, letterValues } from "./game-statics" 
+import { newDeck, shuffleDeck, possibleBoards, isValidWord, letterValues } from "./game-statics" 
 
 const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
 class Board {
@@ -13,10 +13,10 @@ class Board {
     this.board = JSON.parse(JSON.stringify(possibleBoards[board]))
   }
 
-  playAction(potentialTiles: Tile[], locations: [number, number][]) {
+  playAction(potentialTiles: string[], locations: [number, number][]) {
     let tempBoard = JSON.parse(JSON.stringify(this.board))
     for (let i = 0; i < potentialTiles.length; i++) {
-      tempBoard[locations[i][0]][locations[i][1]] = potentialTiles[i].letter
+      tempBoard[locations[i][0]][locations[i][1]] = potentialTiles[i]
     }
 
     // check if all same row or column
@@ -25,7 +25,7 @@ class Board {
     var direction, perpendicular;
     for (let i = 0; i < locations.length; i++) {
       if (locations[i][0] !== r && locations[i][1] !== c) {
-        return "Invalid move"
+        return -1
       }
       if (locations[i][1] !== c) {
         direction = "horizontal"
@@ -39,16 +39,16 @@ class Board {
     // check if valid placements + compute scores
     var score = 0;
     for (let i = 0; i < locations.length; i++) {
-      let value = this.checkTile(potentialTiles[i], locations[i][0], locations[i][1], perpendicular, tempBoard)
+      let value = this.checkTile(locations[i][0], locations[i][1], perpendicular, tempBoard)
       if (value < 0) {
-        return "Invalid move"
+        return value
       } else {
         score += value 
       }
     }
-    let value = this.checkTile(potentialTiles[0], locations[0][0], locations[0][1], direction, tempBoard)
+    let value = this.checkTile(locations[0][0], locations[0][1], direction, tempBoard)
     if (value < 0) {
-      return "Invalid move"
+      return value
     } else {
       score += value
     }
@@ -58,7 +58,7 @@ class Board {
     return score
   }
 
-  checkTile(tile: Tile, i: number, j: number, direction: string, tempBoard: string[][]) {
+  checkTile(i: number, j: number, direction: string, tempBoard: string[][]) {
     var score;
     if (direction === "horizontal") {
       var [l, r] = [j,j]
@@ -121,12 +121,10 @@ class Board {
   }
 }
 
-
-
 class Player {
   name: string
   score: number
-  hand: Tile[]
+  hand: string[]
 
   constructor(name: string) {
     this.name = name
@@ -135,37 +133,77 @@ class Player {
   }
 }
 
-export type Action = "play" | "draw-card" | "resign" | "swap-tiles" | "skip-turn"
+export interface Action {
+  action: "play" | "resign" | "swap-tiles" | "skip-turn",
+  playerIndex: number,
+  potentialTiles?: string[],
+  locations?: [number, number][],
+}
+
 export class GameState {
   board: Board
   players: Player[]
   currentPlayerIndex: number
-  deck: Tile[]
+  deck: string[]
   // phase: GamePhase
 
   constructor(playerNames: string[], board: number) {
     this.board = new Board(board)
     this.players = playerNames.map(name => new Player(name))
     this.currentPlayerIndex = Math.floor(Math.random() * playerNames.length)
-    this.deck = shuffleDeck()
+    this.deck = newDeck()
   }
 
 
-  doAction(action: string, playerIndex: number, tile: Tile = null) {
-    if (playerIndex !== this.currentPlayerIndex) {
+  doAction(action: Action) {
+    if (action.playerIndex !== this.currentPlayerIndex) {
       return "Not your turn"
     }
-    if (action === "draw-card") {
-      this.drawCard(playerIndex)
-    } 
+    if (action.action === "play") {
+      this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
+    } else if (action.action === "skip-turn") {
+      this.skipTurn()
+    } else if (action.action === "swap-tiles") {
+      this.swapTiles(action.playerIndex, action.potentialTiles)
+    } else if (action.action === "resign") {
+      this.resign(action.playerIndex)
+    }
   }
 
-  drawCard(playerIndex: number) {
-    // TODO: draw cards
+  playTiles(playerIndex: number, potentialTiles: string[], locations: [number, number][]) {
+    let score = this.board.playAction(potentialTiles, locations)
+    if (score < 0) {
+      return "Invalid move"
+    }
+    this.players[playerIndex].score += score
+    this.drawTiles(playerIndex, potentialTiles.length)
+    return score
   }
 
   skipTurn() {
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length
+  }
+
+  drawTiles(playerIndex: number, numTiles: number) {
+    for (let i = 0; i < Math.min(numTiles, this.deck.length); i++) {
+      this.players[playerIndex].hand.push(this.deck.pop())
+    }
+  }
+
+  swapTiles(playerIndex: number, tiles: string[]) {
+    for (let i = 0; i < tiles.length; i++) {
+      let index = this.players[playerIndex].hand.indexOf(tiles[i])
+      if (index === -1) {
+        return "Invalid tile"
+      }
+      this.players[playerIndex].hand.splice(index, 1)
+      this.deck.push(tiles[i])
+    }
+    this.drawTiles(playerIndex, tiles.length)
+    for (let i = 0; i < tiles.length; i++) {
+      this.deck.push(tiles[i])
+    }
+    this.deck = shuffleDeck(this.deck)
   }
 
   resign(playerIndex: number) {
