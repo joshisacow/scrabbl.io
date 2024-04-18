@@ -3,24 +3,21 @@
 
 import { Tile, shuffleDeck, possibleBoards, isValidWord, letterValues } from "./game-statics" 
 
+const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
 class Board {
-  board: Tile[][]
+  board: string[][]
   size: number
 
   constructor(board: number) {
-    for (let i = 0; i < possibleBoards[board].length; i++) {
-      for (let j=0; j < possibleBoards[board][0].length; j++) {
-        const tile = new Tile(possibleBoards[board][i][j], possibleBoards[board][i][j])
-        this.board[i][j] = tile
-      }
-    }
     this.size = possibleBoards[board].length
+    this.board = JSON.parse(JSON.stringify(possibleBoards[board]))
   }
 
-  playTile(potentialTiles: Tile[], locations: [number, number][]) {
-    // for (let i = 0; i < potentialTiles.length; i++) {
-    //   this.board[locations[i][0]][locations[i][1]] = potentialTiles[i]
-    // }
+  playAction(potentialTiles: Tile[], locations: [number, number][]) {
+    let tempBoard = JSON.parse(JSON.stringify(this.board))
+    for (let i = 0; i < potentialTiles.length; i++) {
+      tempBoard[locations[i][0]][locations[i][1]] = potentialTiles[i].letter
+    }
 
     // check if all same row or column
     let r = locations[0][0]
@@ -42,47 +39,42 @@ class Board {
     // check if valid placements + compute scores
     var score = 0;
     for (let i = 0; i < locations.length; i++) {
-      let [valid, value] = this.checkTile(potentialTiles[i], locations[i][0], locations[i][1], perpendicular)
-      if (!valid) {
+      let value = this.checkTile(potentialTiles[i], locations[i][0], locations[i][1], perpendicular, tempBoard)
+      if (value < 0) {
         return "Invalid move"
       } else {
-        score += value as number
+        score += value 
       }
     }
-    let [valid, value] = this.checkTile(potentialTiles[0], locations[0][0], locations[0][1], direction)
-    if (!valid) {
+    let value = this.checkTile(potentialTiles[0], locations[0][0], locations[0][1], direction, tempBoard)
+    if (value < 0) {
       return "Invalid move"
     } else {
-      score += value as number
+      score += value
     }
     if (potentialTiles.length >= 7) {
       score += 50
     }
+    return score
   }
 
-  checkTile(tile: Tile, i: number, j: number, direction: string) {
+  checkTile(tile: Tile, i: number, j: number, direction: string, tempBoard: string[][]) {
     var score;
     if (direction === "horizontal") {
       var [l, r] = [j,j]
-      while (l-1 >= 0 && this.board[i][l-1].type === "tile") l--;
-      while (r+1 < this.size && this.board[i][r+1].type === "tile") r++;
-      score = this.checkWord(i, l, i, r)
+      while (l-1 >= 0 && !emptySpaces.includes(tempBoard[i][l-1])) l--;
+      while (r+1 < this.size && !emptySpaces.includes(tempBoard[i][r+1])) r++;
+      score = this.checkWord(i, l, i, r, tempBoard)
     } else {
       var [t,b] = [i,i]
-      while (t-1 >= 0 && this.board[t-1][j].type === "tile") t--;
-      while (b+1 < this.size && this.board[b+1][j].type === "tile") b++;
-      score = this.checkWord(t, j, b, j)
+      while (t-1 >= 0 && !emptySpaces.includes(tempBoard[t-1][j])) t--;
+      while (b+1 < this.size && !emptySpaces.includes(tempBoard[b+1][j])) b++;
+      score = this.checkWord(t, j, b, j, tempBoard)
     }
-    if (score < 0) {
-      return [false, 0]
-    } else if (score === 0) {
-      return [true, 0]
-    }
-
-    return [true, score]
+    return score
   }
 
-  checkWord(i1: number, j1: number, i2: number, j2: number) {
+  checkWord(i1: number, j1: number, i2: number, j2: number, tempBoard: string[][]) {
     var word = ""
     var score = 0
     var multiplier = 1
@@ -90,29 +82,29 @@ class Board {
       return 0
     } else if (i1 === i2) {
       for (let j = j1; j <= j2; j++) {
-        word += this.board[i1][j].letter
-        score += letterValues[this.board[i1][j].letter]
-        if (this.board[i1][j].type === "2xLS") {
-          score += letterValues[this.board[i1][j].letter]
-        } else if (this.board[i1][j].type === "3xLS") {
-          score += 2 * letterValues[this.board[i1][j].letter]
-        } else if (this.board[i1][j].type === "2xWS") {
+        word += tempBoard[i1][j]
+        score += letterValues[tempBoard[i1][j]]
+        if (this.board[i1][j] === "2xLS") {
+          score += letterValues[tempBoard[i1][j]]
+        } else if (this.board[i1][j] === "3xLS") {
+          score += 2 * letterValues[tempBoard[i1][j]]
+        } else if (this.board[i1][j] === "2xWS") {
           multiplier *= 2
-        } else if (this.board[i1][j].type === "3xWS") {
+        } else if (this.board[i1][j] === "3xWS") {
           multiplier *= 3
         }
       }
     } else if (j1 === j2) {
       for (let i = i1; i <= i2; i++) {
-        word += this.board[i][j1].letter
-        score += letterValues[this.board[i][j1].letter]
-        if (this.board[i][j1].type === "2xLS") {
-          score += letterValues[this.board[i][j1].letter]
-        } else if (this.board[i][j1].type === "3xLS") {
-          score += 2 * letterValues[this.board[i][j1].letter]
-        } else if (this.board[i][j1].type === "2xWS") {
+        word += tempBoard[i][j1]
+        score += letterValues[tempBoard[i][j1]]
+        if (this.board[i][j1] === "2xLS") {
+          score += letterValues[tempBoard[i][j1]]
+        } else if (this.board[i][j1] === "3xLS") {
+          score += 2 * letterValues[tempBoard[i][j1]]
+        } else if (this.board[i][j1] === "2xWS") {
           multiplier *= 2
-        } else if (this.board[i][j1].type === "3xWS") {
+        } else if (this.board[i][j1] === "3xWS") {
           multiplier *= 3
         }
       }
@@ -129,6 +121,8 @@ class Board {
   }
 }
 
+
+
 class Player {
   name: string
   score: number
@@ -141,11 +135,13 @@ class Player {
   }
 }
 
+export type Action = "play" | "draw-card" | "resign" | "swap-tiles" | "skip-turn"
 export class GameState {
   board: Board
   players: Player[]
   currentPlayerIndex: number
   deck: Tile[]
+  // phase: GamePhase
 
   constructor(playerNames: string[], board: number) {
     this.board = new Board(board)
@@ -168,6 +164,17 @@ export class GameState {
     // TODO: draw cards
   }
 
+  skipTurn() {
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length
+  }
+
+  resign(playerIndex: number) {
+    this.players.splice(playerIndex, 1)
+    if (this.currentPlayerIndex >= playerIndex) {
+      this.currentPlayerIndex -= 1
+    }
+  }
+
 
 
 
@@ -181,6 +188,17 @@ const dealCards = (state: GameState) => {
   })
 }
 
+export function createNewGame(playerNames: string[], board: number): GameState {
+  if (playerNames.length < 2 || playerNames.length > 4) {
+    throw new Error("Must have 2-4 players")
+  }
+  const state = new GameState(playerNames, board)
+  dealCards(state)
+  console.log(state.board.board)
+  return state
+}
+
+createNewGame(["a", "b", "c", "d"], 0)
 
 
 

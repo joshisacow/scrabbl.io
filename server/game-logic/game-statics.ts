@@ -1,5 +1,5 @@
 // boards
-export const possibleBoards = [
+export const possibleBoards = [[
     ["3xWS", "    ", "    ", "2xLS", "    ", "    ", "    ", "3xWS", "    ", "    ", "    ", "2xLS", "    ", "    ", "3xWS"],
     ["    ", "2xWS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "2xWS", "    "],
     ["    ", "    ", "2xWS", "    ", "    ", "    ", "2xLS", "    ", "2xLS", "    ", "    ", "    ", "2xWS", "    ", "    "],
@@ -15,7 +15,7 @@ export const possibleBoards = [
     ["    ", "    ", "2xWS", "    ", "    ", "    ", "2xLS", "    ", "2xLS", "    ", "    ", "    ", "2xWS", "    ", "    "],
     ["    ", "2xWS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "2xWS", "    "],
     ["3xWS", "    ", "    ", "2xLS", "    ", "    ", "    ", "3xWS", "    ", "    ", "    ", "2xLS", "    ", "    ", "3xWS"]
-]
+]]
 
 
 // letters
@@ -31,7 +31,7 @@ export class Tile {
             type = "empty"
         }
         this.type = type
-        this.player = 1
+        this.player = null
         this.letter = letter
         this.location = "deck"
     }
