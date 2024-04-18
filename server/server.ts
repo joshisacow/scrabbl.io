@@ -10,6 +10,7 @@ import session from 'express-session'
 import MongoStore from 'connect-mongo'
 import { Issuer, Strategy, generators } from 'openid-client'
 import passport from 'passport'
+import { Strategy as CustomStrategy } from "passport-custom"
 import { gitlab } from "./secrets"
 
 // set up Mongo
@@ -23,6 +24,14 @@ const server = createServer(app)
 const port = parseInt(process.env.PORT) || 8228
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+
+const DISABLE_SECURITY = process.env.DISABLE_SECURITY
+
+const passportStrategies = [
+  ...(DISABLE_SECURITY ? ["disable-security"] : []),
+  "oidc",
+]
+
 
 // set up Pino logging
 const logger = pino({
@@ -76,7 +85,7 @@ const wrap = (middleware: any) => (socket: any, next: any) => middleware(socket.
 io.use(wrap(sessionMiddleware))
 
 // hard-coded game configuration
-const playerUserIds = ["hm222", "ys385"]
+const playerUserIds = ["aee23", "ys385"]
 let gameState = createEmptyGame(playerUserIds, 1, 2)
 
 function emitUpdatedCardsForPlayers(cards: Card[], newGame = false) {
@@ -200,7 +209,7 @@ client.connect().then(() => {
     const params = {
       scope: 'openid profile email',
       nonce: generators.nonce(),
-      redirect_uri: 'http://localhost:8221/login-callback', //Do I pick a different port?
+      redirect_uri: 'http://localhost:8221/api/login-callback', //Do I pick a different port?
       state: generators.state(),
     }
   
@@ -211,20 +220,36 @@ client.connect().then(() => {
     }
   
     passport.use('oidc', new Strategy({ client, params }, verify))
-
-    app.get(
-      "/api/login", 
-      passport.authenticate("oidc", { failureRedirect: "/api/login" }), 
-      (req, res) => res.redirect("/")
-    )
+    passport.use("disable-security", new CustomStrategy((req, done) => {
+      if (req.query.key !== DISABLE_SECURITY) {
+        console.log("you must supply ?key=" + DISABLE_SECURITY + " to log in via DISABLE_SECURITY")
+        done(null, false)
+      } else {
+        done(null, { preferred_username: req.query.user, roles: [].concat(req.query.role) })
+      }
+    }))
+    // app.get(
+    //   "/api/login", 
+    //   passport.authenticate("oidc", { failureRedirect: "/api/login" }), 
+    //   (req, res) => res.redirect("/")
+    // )
+    app.get('/api/login', passport.authenticate(passportStrategies, {
+      successReturnToOrRedirect: "/"
+    }))
     
-    app.get(
-      "/login-callback",
-      passport.authenticate("oidc", {
-        successRedirect: "/game",
-        failureRedirect: "/api/login",
-      })
-    )    
+    
+    // app.get(
+    //   "/login-callback",
+    //   passport.authenticate("oidc", {
+    //     successRedirect: "/game",
+    //     failureRedirect: "/api/login",
+    //   })
+    // )    
+    app.get('/api/login-callback', passport.authenticate(passportStrategies, {
+      successReturnToOrRedirect: '/',
+      failureRedirect: '/',
+    }))
+    
 
     // start server
     server.listen(port)
