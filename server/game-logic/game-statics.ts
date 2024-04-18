@@ -1,5 +1,5 @@
 // boards
-export const possibleBoards = [
+export const possibleBoards = [[
     ["3xWS", "    ", "    ", "2xLS", "    ", "    ", "    ", "3xWS", "    ", "    ", "    ", "2xLS", "    ", "    ", "3xWS"],
     ["    ", "2xWS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "2xWS", "    "],
     ["    ", "    ", "2xWS", "    ", "    ", "    ", "2xLS", "    ", "2xLS", "    ", "    ", "    ", "2xWS", "    ", "    "],
@@ -15,27 +15,10 @@ export const possibleBoards = [
     ["    ", "    ", "2xWS", "    ", "    ", "    ", "2xLS", "    ", "2xLS", "    ", "    ", "    ", "2xWS", "    ", "    "],
     ["    ", "2xWS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "3xLS", "    ", "    ", "    ", "2xWS", "    "],
     ["3xWS", "    ", "    ", "2xLS", "    ", "    ", "    ", "3xWS", "    ", "    ", "    ", "2xLS", "    ", "    ", "3xWS"]
-]
+]]
 
 
 // letters
-
-export class Tile {
-    type: string
-    player: any;
-    letter: string;
-    location: string;
-
-    constructor (letter: string, type: string = "tile") {
-        if (type === "   " ) {
-            type = "empty"
-        }
-        this.type = type
-        this.player = 1
-        this.letter = letter
-        this.location = "deck"
-    }
-}
 
 const initialLetters = {
     "a": { "points":  1, "tiles":  9 },
@@ -97,19 +80,24 @@ export const letterValues: { [key: string]: number } = {
     "Z": 10 
 }
 
-export const shuffleDeck = () => {
+export const newDeck = () => {
     let letters = []
     for (const [letter, value] of Object.entries(initialLetters)) {
         for (let i = 0; i < value.tiles; i++) {
-            letters.push(new Tile(letter))
+            letters.push(letter)
         }
     }
-    for (let i = letters.length - 1; i > 0; i--) {
+    const deck = shuffleDeck(letters);
+    return deck;
+}
+
+export const shuffleDeck = (deck: string[]) => {
+    for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [letters[i], letters[j]] = [letters[j], letters[i]];
+        [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    console.log(letters)
-    return letters;
+    console.log(deck)
+    return deck;
 }
 
 // validate words
