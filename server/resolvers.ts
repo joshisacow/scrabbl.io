@@ -3,7 +3,7 @@ import { gameStates, users } from './server'
 import { ObjectId } from 'mongodb'
 
 const fetchGameState = async (gameId: string): Promise<GameState> => {
-    const state = await gameStates.findOne({ _id: new ObjectId(gameId) })
+    const state = await gameStates.findOne({ gameId: gameId })
     if (!state) {
         throw new Error("Game not found")
     }
@@ -12,7 +12,7 @@ const fetchGameState = async (gameId: string): Promise<GameState> => {
 
 const saveGameState = async (gameId: string, state: GameState) => {
     await gameStates.updateOne(
-        { _id: new ObjectId(gameId) }, 
+        { gameId: gameId }, 
         { $set: {
             board: state.board,
             players: state.players,
@@ -21,6 +21,8 @@ const saveGameState = async (gameId: string, state: GameState) => {
         } },
         { upsert: true }
     )
+    const check = await gameStates.findOne({ _id: gameId })
+    console.log(check)
 }
 
 const resolvers = {

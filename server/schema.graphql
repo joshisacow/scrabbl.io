@@ -5,7 +5,6 @@ type Player {
 }
 
 type GameState {
-    id: ID!
     board: [[String]]
     players: [Player]
     currentPlayerIndex: Int
@@ -26,9 +25,15 @@ input Action {
     locations: [[Int]]
 }
 
+input Config {
+    playerCount: Int
+    board: Int
+    playerNames: [String]
+}
+
 type Mutation {
     createGame: ID
     joinGame(gameId: ID!, playerName: String!): Boolean 
-    startGame(gameId: ID!): GameState
+    startGame(gameId: ID!, config: Config!): GameState
     doAction(gameId: ID!, action: Action): GameState
 }

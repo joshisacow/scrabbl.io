@@ -49,27 +49,29 @@ export class GameState {
       return "Not your turn"
     }
     if (action.action === "play") {
-      this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
-    } else if (action.action === "skip-turn") {
-      this.skipTurn()
+      const bool = this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
+      if (!bool) {
+        return "Invalid play"
+      }
     } else if (action.action === "swap-tiles") {
       this.swapTiles(action.playerIndex, action.potentialTiles)
     } else if (action.action === "resign") {
       this.resign(action.playerIndex)
     }
+    this.nextTurn()
   }
 
   playTiles(playerIndex: number, potentialTiles: string[], locations: [number, number][]) {
     let score = this.playAction(potentialTiles, locations)
     if (score < 0) {
-      return "Invalid move"
+      return false
     }
     this.players[playerIndex].score += score
     this.drawTiles(playerIndex, potentialTiles.length)
-    return score
+    return true
   }
 
-  skipTurn() {
+  nextTurn() {
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length
   }
 
