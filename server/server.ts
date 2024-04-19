@@ -122,7 +122,7 @@ app.get("/api/user", (req, res) => {
 client.connect().then(() => {
   logger.info('connected successfully to MongoDB')
   db = client.db("test")
-  gameStates = db.collection('gameStates')
+  gameStates = db.collection('game-states')
   users = db.collection('users')
   // operators = db.collection('operators')
   // orders = db.collection('orders')
@@ -185,3 +185,5 @@ client.connect().then(() => {
     // logger.info(`Game server listening on port ${port}`)
   })
 })
+
+export { gameStates, users }

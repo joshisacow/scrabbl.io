@@ -27,7 +27,8 @@ input Action {
 }
 
 type Mutation {
-    createGame: GameState
-    joinGame(gameId: ID!, playerName: String!): GameState
-    doAction(action: Action): GameState
+    createGame: ID
+    joinGame(gameId: ID!, playerName: String!): Boolean 
+    startGame(gameId: ID!): GameState
+    doAction(gameId: ID!, action: Action): GameState
 }

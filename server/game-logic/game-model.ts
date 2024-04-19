@@ -23,6 +23,12 @@ export interface Action {
 }
 const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
 
+export interface GameObject {
+  board: string[][]
+  players: Player[]
+  currentPlayerIndex: number
+  deck: string[]
+}
 export class GameState {
   board: string[][]
   players: Player[]
@@ -214,16 +220,22 @@ const dealCards = (state: GameState) => {
   })
 }
 
-export function createNewGame(playerNames: string[], board: number): GameState {
-  if (playerNames.length < 2 || playerNames.length > 4) {
+export interface Config {
+  playerCount: number
+  board: number
+  playerNames: string[]
+}
+
+export function createNewGame(config: Config): GameState {
+  if (config.playerNames.length < 2 || config.playerNames.length > 4) {
     throw new Error("Must have 2-4 players")
   }
-  const state = new GameState(playerNames, board)
+  const state = new GameState(config.playerNames, config.board)
   dealCards(state)
   return state
 }
 
-createNewGame(["a", "b", "c", "d"], 0)
+// createNewGame(["a", "b", "c", "d"], {0})
 
 
 
