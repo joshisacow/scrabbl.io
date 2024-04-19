@@ -7,21 +7,38 @@
     "@apollo/server": "^4.10.4",
     "@apollo/subgraph": "^2.7.3",
     "body-parser": "^1.20.0",
+    "connect-mongo": "^4.6.0",
+    "esbuild": "^0.15.15",
+    "esbuild-plugin-pino": "^1.2.6",
     "express": "^4.18.2",
     "express-pino-logger": "^7.0.0",
+<<<<<<< HEAD
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
     "pino-pretty": "^9.1.0",
+=======
+    "express-session": "^1.17.3",
+    "http-proxy": "^1.18.1",
+    "mongodb": "^4.12.0",
+    "openid-client": "^5.3.0",
+    "passport": "^0.7.0",
+    "passport-custom": "^1.1.1",
+    "pino-pretty": "^9.1.1",
+>>>>>>> bdfc7e40300fe26409ac0a3286d7ca5611484caf
     "socket.io": "^4.5.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.2.2"
+    "typescript": "^4.7.4"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/express-pino-logger": "^4.0.5",
-    "@types/node": "18"
+    "@types/node": "18",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/express-pino-logger": "^4.0.3",
+    "@types/express-session": "^1.17.5",
+    "@types/passport": "^1.0.11"
   },
   "scripts": {
-    "start": "ts-node-dev --respawn server.ts"
+    "start": "ts-node-dev --respawn server.ts",
+    "build": "node build.js"
   }
 }

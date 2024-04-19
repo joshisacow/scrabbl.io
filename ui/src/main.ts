@@ -1,11 +1,44 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
+
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
+
 import App from './App.vue'
-import router from './router'
+import Game from './views/Game.vue'
+import Login from './views/Login.vue'
 
-const app = createApp(App)
 
-app.use(router)
+const routes = [
+  {
+    path: "/",
+    component: Login,
+    // props (route) {
+    //   return {
+    //     playerIndex: route.params.playerIndex
+    //   }
+    // }
+  },
+  {
+    path: "/game",
+    component: Game,
+    // props (route) {
+    //   return {
+    //     playerIndex: route.params.playerIndex
+    //   }
+    // }
+  
+  }
+]
 
-app.mount('#app')
+const router = createRouter({
+	history: createWebHistory(),
+	routes,
+})
+
+createApp(App)
+	.use(BootstrapVue)
+	.use(BootstrapVueIcons)
+	.use(router)
+	.mount('#app')
