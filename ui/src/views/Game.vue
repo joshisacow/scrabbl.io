@@ -1,86 +1,91 @@
 <template>
-  <div>
-    <b-button class="mx-2 my-2" size="sm" @click="socket.emit('new-game')">New Game</b-button>
-    <b-badge class="mr-2 mb-2" :variant="myTurn ? 'primary' : 'secondary'">turn: {{ currentTurnPlayerIndex }}</b-badge>
-    <b-badge class="mr-2 mb-2">{{ phase }}</b-badge>
-    <div
-      v-for="card in cards"
-      :key="card.id"
-      @click="playCard(card.id)"
-    >
-      <pre>{{ formatCard(card, true) }}</pre>
+  <div class="game-board-container">
+    <div class="game-board">
+      <div v-for="(row, rowIndex) in board" :key="'row-' + rowIndex" class="board-row">
+        <div
+          v-for="(tile, colIndex) in row"
+          :key="'tile-' + rowIndex + '-' + colIndex"
+          class="board-tile"
+          :class="tile.type"
+          @click="placeTile(rowIndex, colIndex)"
+        >
+          {{ tile.letter }}
+        </div>
+      </div>
     </div>
-    <b-button class="mx-2 my-2" size="sm" @click="drawCard" :disabled="!myTurn">Draw Card</b-button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, Ref } from 'vue'
-import { io } from "socket.io-client"
-import { Card, GamePhase, Action, formatCard, CardId } from "../../../server/card-model"
+import { ref } from 'vue'
 
-const socket = io()
-const playerIndex: Ref<number | "all"> = ref("all")
-
-const cards: Ref<Card[]> = ref([])
-const currentTurnPlayerIndex = ref(-1)
-const phase = ref("")
-const playCount = ref(-1)
-
-const myTurn = computed(() => currentTurnPlayerIndex.value === playerIndex.value && phase.value !== "game-over")
-
-socket.on("all-cards", (allCards: Card[]) => {
-  cards.value = allCards
-})
-
-socket.on("updated-cards", (updatedCards: Card[]) => {
-  applyUpdatedCards(updatedCards)
-})
-
-socket.on("game-state", (newPlayerIndex: number, newCurrentTurnPlayerIndex: number, newPhase: GamePhase, newPlayCount: number) => {
-  if (newPlayerIndex != null) {
-    playerIndex.value = newPlayerIndex
-  }
-  currentTurnPlayerIndex.value = newCurrentTurnPlayerIndex
-  phase.value = newPhase
-  playCount.value = newPlayCount
-})
-
-function doAction(action: Action) {
-  return new Promise<Card[]>((resolve, reject) => {
-    socket.emit("action", action)
-    socket.once("updated-cards", (updatedCards: Card[]) => {
-      resolve(updatedCards)
-    })
-  })
+type Tile = {
+  letter: string | null,
+  type: string
 }
+const boardMap = [
+  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
+  ['    ', 'DWS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'DWS', '    '],
+  ['    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    '],
+  ['DLS', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', 'DLS'],
+  ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
+  ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
+  ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
+  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
+  ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
+  ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
+  ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
+  ['DLS', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', 'DLS'],
+  ['    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    '],
+  ['    ', 'DWS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'DWS', '    '],
+  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
+];
 
-async function drawCard() {
-  if (typeof playerIndex.value === "number") {
-    const updatedCards = await doAction({ action: "draw-card", playerIndex: playerIndex.value })
-    if (updatedCards.length === 0) {
-      alert("didn't work")
-    }
-  }
-}
+// We use the map created above to initialize the board
+const board = ref(boardMap.map(row => row.map(type => {
+  return { letter: null, type: type.trim() || 'normal' };
+})));
 
-async function playCard(cardId: CardId) {
-  if (typeof playerIndex.value === "number") {
-    const updatedCards = await doAction({ action: "play-card", playerIndex: playerIndex.value, cardId })
-    if (updatedCards.length === 0) {
-      alert("didn't work")
-    }
-  }
-}
-
-async function applyUpdatedCards(updatedCards: Card[]) {
-  for (const x of updatedCards) {
-    const existingCard = cards.value.find(y => x.id === y.id)
-    if (existingCard) {
-      Object.assign(existingCard, x)
-    } else {
-      cards.value.push(x)
-    }
+function placeTile(rowIndex: number, colIndex: number) {
+  const tile = board.value[rowIndex][colIndex];
+  if (tile.letter === null) {
+    tile.letter = 'A'; // Placeholder letter, this would be dynamic in a real game
   }
 }
 </script>
+
+<style scoped>
+.game-board-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+}
+
+.game-board {
+  display: flex;
+  flex-direction: column;
+}
+
+.board-row {
+  display: flex;
+}
+
+.board-tile {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Styles for special tiles */
+.DWS { background-color: #f4cccc; } /* Light red for Double Word Score */
+.TWS { background-color: #ea9999; } /* Darker red for Triple Word Score */
+.DLS { background-color: #cfe2f3; } /* Light blue for Double Letter Score */
+.TLS { background-color: #9fc5e8; } /* Darker blue for Triple Letter Score */
+</style>
