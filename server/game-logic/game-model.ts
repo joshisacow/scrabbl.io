@@ -3,14 +3,97 @@
 
 import { newDeck, shuffleDeck, possibleBoards, isValidWord, letterValues } from "./game-statics" 
 
-const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
-class Board {
-  board: string[][]
-  size: number
+class Player {
+  name: string
+  score: number
+  hand: string[]
 
-  constructor(board: number) {
-    this.size = possibleBoards[board].length
+  constructor(name: string) {
+    this.name = name
+    this.score = 0
+    this.hand = []
+  }
+}
+
+export interface Action {
+  action: "play" | "resign" | "swap-tiles" | "skip-turn",
+  playerIndex: number,
+  potentialTiles?: string[],
+  locations?: [number, number][],
+}
+const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
+
+export class GameState {
+  board: string[][]
+  players: Player[]
+  currentPlayerIndex: number
+  deck: string[]
+  // phase: GamePhase
+
+  constructor(playerNames: string[], board: number) {
     this.board = JSON.parse(JSON.stringify(possibleBoards[board]))
+    this.players = playerNames.map(name => new Player(name))
+    this.currentPlayerIndex = Math.floor(Math.random() * playerNames.length)
+    this.deck = newDeck()
+  }
+
+
+  doAction(action: Action) {
+    if (action.playerIndex !== this.currentPlayerIndex) {
+      return "Not your turn"
+    }
+    if (action.action === "play") {
+      this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
+    } else if (action.action === "skip-turn") {
+      this.skipTurn()
+    } else if (action.action === "swap-tiles") {
+      this.swapTiles(action.playerIndex, action.potentialTiles)
+    } else if (action.action === "resign") {
+      this.resign(action.playerIndex)
+    }
+  }
+
+  playTiles(playerIndex: number, potentialTiles: string[], locations: [number, number][]) {
+    let score = this.playAction(potentialTiles, locations)
+    if (score < 0) {
+      return "Invalid move"
+    }
+    this.players[playerIndex].score += score
+    this.drawTiles(playerIndex, potentialTiles.length)
+    return score
+  }
+
+  skipTurn() {
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length
+  }
+
+  drawTiles(playerIndex: number, numTiles: number) {
+    for (let i = 0; i < Math.min(numTiles, this.deck.length); i++) {
+      this.players[playerIndex].hand.push(this.deck.pop())
+    }
+  }
+
+  swapTiles(playerIndex: number, tiles: string[]) {
+    for (let i = 0; i < tiles.length; i++) {
+      let index = this.players[playerIndex].hand.indexOf(tiles[i])
+      if (index === -1) {
+        return "Invalid tile"
+      }
+      this.players[playerIndex].hand.splice(index, 1)
+      this.deck.push(tiles[i])
+    }
+    this.drawTiles(playerIndex, tiles.length)
+    for (let i = 0; i < tiles.length; i++) {
+      this.deck.push(tiles[i])
+    }
+    this.deck = shuffleDeck(this.deck)
+  }
+
+  resign(playerIndex: number) {
+    this.players.splice(playerIndex, 1)
+    if (this.currentPlayerIndex >= playerIndex) {
+      this.currentPlayerIndex -= 1
+    }
   }
 
   playAction(potentialTiles: string[], locations: [number, number][]) {
@@ -63,12 +146,12 @@ class Board {
     if (direction === "horizontal") {
       var [l, r] = [j,j]
       while (l-1 >= 0 && !emptySpaces.includes(tempBoard[i][l-1])) l--;
-      while (r+1 < this.size && !emptySpaces.includes(tempBoard[i][r+1])) r++;
+      while (r+1 < this.board.length && !emptySpaces.includes(tempBoard[i][r+1])) r++;
       score = this.checkWord(i, l, i, r, tempBoard)
     } else {
       var [t,b] = [i,i]
       while (t-1 >= 0 && !emptySpaces.includes(tempBoard[t-1][j])) t--;
-      while (b+1 < this.size && !emptySpaces.includes(tempBoard[b+1][j])) b++;
+      while (b+1 < this.board.length && !emptySpaces.includes(tempBoard[b+1][j])) b++;
       score = this.checkWord(t, j, b, j, tempBoard)
     }
     return score
@@ -119,101 +202,6 @@ class Board {
     return -1
 
   }
-}
-
-class Player {
-  name: string
-  score: number
-  hand: string[]
-
-  constructor(name: string) {
-    this.name = name
-    this.score = 0
-    this.hand = []
-  }
-}
-
-export interface Action {
-  action: "play" | "resign" | "swap-tiles" | "skip-turn",
-  playerIndex: number,
-  potentialTiles?: string[],
-  locations?: [number, number][],
-}
-
-export class GameState {
-  board: Board
-  players: Player[]
-  currentPlayerIndex: number
-  deck: string[]
-  // phase: GamePhase
-
-  constructor(playerNames: string[], board: number) {
-    this.board = new Board(board)
-    this.players = playerNames.map(name => new Player(name))
-    this.currentPlayerIndex = Math.floor(Math.random() * playerNames.length)
-    this.deck = newDeck()
-  }
-
-
-  doAction(action: Action) {
-    if (action.playerIndex !== this.currentPlayerIndex) {
-      return "Not your turn"
-    }
-    if (action.action === "play") {
-      this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
-    } else if (action.action === "skip-turn") {
-      this.skipTurn()
-    } else if (action.action === "swap-tiles") {
-      this.swapTiles(action.playerIndex, action.potentialTiles)
-    } else if (action.action === "resign") {
-      this.resign(action.playerIndex)
-    }
-  }
-
-  playTiles(playerIndex: number, potentialTiles: string[], locations: [number, number][]) {
-    let score = this.board.playAction(potentialTiles, locations)
-    if (score < 0) {
-      return "Invalid move"
-    }
-    this.players[playerIndex].score += score
-    this.drawTiles(playerIndex, potentialTiles.length)
-    return score
-  }
-
-  skipTurn() {
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length
-  }
-
-  drawTiles(playerIndex: number, numTiles: number) {
-    for (let i = 0; i < Math.min(numTiles, this.deck.length); i++) {
-      this.players[playerIndex].hand.push(this.deck.pop())
-    }
-  }
-
-  swapTiles(playerIndex: number, tiles: string[]) {
-    for (let i = 0; i < tiles.length; i++) {
-      let index = this.players[playerIndex].hand.indexOf(tiles[i])
-      if (index === -1) {
-        return "Invalid tile"
-      }
-      this.players[playerIndex].hand.splice(index, 1)
-      this.deck.push(tiles[i])
-    }
-    this.drawTiles(playerIndex, tiles.length)
-    for (let i = 0; i < tiles.length; i++) {
-      this.deck.push(tiles[i])
-    }
-    this.deck = shuffleDeck(this.deck)
-  }
-
-  resign(playerIndex: number) {
-    this.players.splice(playerIndex, 1)
-    if (this.currentPlayerIndex >= playerIndex) {
-      this.currentPlayerIndex -= 1
-    }
-  }
-
-
 
 
 }
@@ -232,7 +220,6 @@ export function createNewGame(playerNames: string[], board: number): GameState {
   }
   const state = new GameState(playerNames, board)
   dealCards(state)
-  console.log(state.board.board)
   return state
 }
 
