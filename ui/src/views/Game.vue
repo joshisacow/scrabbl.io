@@ -16,6 +16,26 @@
         </div>
       </div>
     </div>
+    <div class="tile-bag">
+      <div v-for="(amount, letter) in tileBag" :key="letter">
+        {{ letter }}: {{ amount }}
+      </div>
+    </div>
+
+    <!-- Turn History -->
+    <div class="turn-history">
+      <div v-for="turn in turnHistory" :key="turn.player + '-' + turn.turn">
+        Player {{ turn.player }}, Turn {{ turn.turn }}: {{ turn.word }} ({{ turn.score }})
+      </div>
+    </div>
+
+    <!-- Player Scores -->
+    <div class="player-scores">
+      <div v-for="(score, player) in playerScores" :key="player">
+        Player {{ player }}: Score - {{ score }}
+      </div>
+    </div>
+
     <div class="tile-rack-container">
       <div class="tile-rack">
         <button class="shuffle-button" @click="shuffleTiles">Shuffle</button>
@@ -32,6 +52,7 @@
       </div>
     </div>
   </div>
+  
 </template>
 
 
@@ -165,6 +186,30 @@ function resetPlayedTiles() {
 </script>
 
 <style scoped>
+.tile-bag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #f4f4f4;
+  padding: 10px;
+}
+
+.turn-history {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: #f4f4f4;
+  padding: 10px;
+}
+
+.player-scores {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #f4f4f4;
+  padding: 10px;
+}
+
 .game-board-container {
   display: flex;
   justify-content: center;
