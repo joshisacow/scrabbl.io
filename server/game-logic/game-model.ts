@@ -16,12 +16,12 @@ class Player {
 }
 
 export interface Action {
-  action: "play" | "resign" | "swap-tiles" | "skip-turn",
+  action: "PLAY" | "SWAP_TILES" | "RESIGN" | "SKIP_TURN",
   playerIndex: number,
   potentialTiles?: string[],
   locations?: [number, number][],
 }
-const emptySpaces = ["   ", "2xWS", "3xWS", "2xLS", "3xLS"]
+const emptySpaces = ["    ", "2xWS", "3xWS", "2xLS", "3xLS"]
 
 export interface GameObject {
   board: string[][]
@@ -48,25 +48,35 @@ export class GameState {
     if (action.playerIndex !== this.currentPlayerIndex) {
       return "Not your turn"
     }
-    if (action.action === "play") {
+    if (action.action === "PLAY") {
       const bool = this.playTiles(action.playerIndex, action.potentialTiles, action.locations)
       if (!bool) {
         return "Invalid play"
       }
-    } else if (action.action === "swap-tiles") {
+    } else if (action.action === "SWAP_TILES") {
       this.swapTiles(action.playerIndex, action.potentialTiles)
-    } else if (action.action === "resign") {
+    } else if (action.action === "RESIGN") {
       this.resign(action.playerIndex)
     }
     this.nextTurn()
   }
 
   playTiles(playerIndex: number, potentialTiles: string[], locations: [number, number][]) {
+    for (let i = 0; i < potentialTiles.length; i++) {
+      if (this.players[playerIndex].hand.filter(tile => tile === potentialTiles[i]).length < potentialTiles.filter(tile => tile === potentialTiles[i]).length) {
+        return false
+      }
+    }
     let score = this.playAction(potentialTiles, locations)
+    console.log("score", score)
     if (score < 0) {
       return false
     }
     this.players[playerIndex].score += score
+    for (let i = 0; i < potentialTiles.length; i++) {
+      let index = this.players[playerIndex].hand.indexOf(potentialTiles[i])
+      this.players[playerIndex].hand.splice(index, 1)
+    }
     this.drawTiles(playerIndex, potentialTiles.length)
     return true
   }
@@ -109,6 +119,7 @@ export class GameState {
     for (let i = 0; i < potentialTiles.length; i++) {
       tempBoard[locations[i][0]][locations[i][1]] = potentialTiles[i]
     }
+    console.log(tempBoard)
 
     // check if all same row or column
     let r = locations[0][0]
@@ -145,11 +156,14 @@ export class GameState {
     }
     if (potentialTiles.length >= 7) {
       score += 50
+    } if (score > 0) {
+      this.board = tempBoard
     }
     return score
   }
 
   checkTile(i: number, j: number, direction: string, tempBoard: string[][]) {
+    console.log("checking tile", i, j, direction)
     var score;
     if (direction === "horizontal") {
       var [l, r] = [j,j]
@@ -166,6 +180,7 @@ export class GameState {
   }
 
   checkWord(i1: number, j1: number, i2: number, j2: number, tempBoard: string[][]) {
+    console.log("coords", i1, j1, i2, j2)
     var word = ""
     var score = 0
     var multiplier = 1
@@ -200,13 +215,16 @@ export class GameState {
         }
       }
     } else {
+      console.log("invalid position")
       return -1
     }
     
     // check word in list
     if (isValidWord(word)) {
+      console.log("success", word, score* multiplier)
       return score * multiplier
     }
+    console.log(word, "is not a valid word")
     return -1
 
   }

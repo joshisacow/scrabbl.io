@@ -21,8 +21,6 @@ const saveGameState = async (gameId: string, state: GameState) => {
         } },
         { upsert: true }
     )
-    const check = await gameStates.findOne({ _id: gameId })
-    console.log(check)
 }
 
 const resolvers = {
@@ -44,7 +42,8 @@ const resolvers = {
         doAction: async (_: any, { gameId, action }: { gameId: string, action: Action }) => {
             console.log("doAction", gameId, action)
             const state = await fetchGameState(gameId)
-            state.doAction(action)
+            let message = state.doAction(action)
+            console.log(message)
             await saveGameState(gameId, state)
             return state
         }

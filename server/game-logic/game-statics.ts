@@ -21,32 +21,32 @@ export const possibleBoards = [[
 // letters
 
 const initialLetters = {
-    "a": { "points":  1, "tiles":  9 },
-    "b": { "points":  3, "tiles":  2 },
-    "c": { "points":  3, "tiles":  2 },
-    "d": { "points":  2, "tiles":  4 },
-    "e": { "points":  1, "tiles": 12 },
-    "f": { "points":  4, "tiles":  2 },
-    "g": { "points":  2, "tiles":  3 },
-    "h": { "points":  4, "tiles":  2 },
-    "i": { "points":  1, "tiles":  9 },
-    "j": { "points":  8, "tiles":  1 },
-    "k": { "points":  5, "tiles":  1 },
-    "l": { "points":  1, "tiles":  4 },
-    "m": { "points":  3, "tiles":  2 },
-    "n": { "points":  1, "tiles":  6 },
-    "o": { "points":  1, "tiles":  8 },
-    "p": { "points":  3, "tiles":  2 },
-    "q": { "points": 10, "tiles":  1 },
-    "r": { "points":  1, "tiles":  6 },
-    "s": { "points":  1, "tiles":  4 },
-    "t": { "points":  1, "tiles":  6 },
-    "u": { "points":  1, "tiles":  4 },
-    "v": { "points":  4, "tiles":  2 },
-    "w": { "points":  4, "tiles":  2 },
-    "x": { "points":  8, "tiles":  1 },
-    "y": { "points":  4, "tiles":  2 },
-    "z": { "points": 10, "tiles":  1 },
+    "A": { "points":  1, "tiles":  9 },
+    "B": { "points":  3, "tiles":  2 },
+    "C": { "points":  3, "tiles":  2 },
+    "D": { "points":  2, "tiles":  4 },
+    "E": { "points":  1, "tiles": 12 },
+    "F": { "points":  4, "tiles":  2 },
+    "G": { "points":  2, "tiles":  3 },
+    "H": { "points":  4, "tiles":  2 },
+    "I": { "points":  1, "tiles":  9 },
+    "J": { "points":  8, "tiles":  1 },
+    "K": { "points":  5, "tiles":  1 },
+    "L": { "points":  1, "tiles":  4 },
+    "M": { "points":  3, "tiles":  2 },
+    "N": { "points":  1, "tiles":  6 },
+    "O": { "points":  1, "tiles":  8 },
+    "P": { "points":  3, "tiles":  2 },
+    "Q": { "points": 10, "tiles":  1 },
+    "R": { "points":  1, "tiles":  6 },
+    "S": { "points":  1, "tiles":  4 },
+    "T": { "points":  1, "tiles":  6 },
+    "U": { "points":  1, "tiles":  4 },
+    "V": { "points":  4, "tiles":  2 },
+    "W": { "points":  4, "tiles":  2 },
+    "X": { "points":  8, "tiles":  1 },
+    "Y": { "points":  4, "tiles":  2 },
+    "Z": { "points": 10, "tiles":  1 },
     "": { "points": 0, "tiles": 2}
 }
 
@@ -96,7 +96,6 @@ export const shuffleDeck = (deck: string[]) => {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    console.log(deck)
     return deck;
 }
 
