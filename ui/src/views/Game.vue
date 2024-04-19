@@ -9,7 +9,10 @@
           :class="tile.type"
           @click="placeTile(rowIndex, colIndex)"
         >
-          {{ tile.letter }}
+          <!-- Display letter if present -->
+          <span v-if="tile.letter" class="tile-letter">{{ tile.letter }}</span>
+          <!-- Display score multiplier if it's a special tile and no letter is present -->
+          <span v-if="!tile.letter && tile.type !== 'normal'" class="tile-score">{{ tile.type }}</span>
         </div>
       </div>
     </div>
@@ -79,7 +82,7 @@ function placeTile(rowIndex: number, colIndex: number) {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px;
+  font-size: 15px;
   cursor: pointer;
 }
 
