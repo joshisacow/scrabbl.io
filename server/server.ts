@@ -16,6 +16,7 @@ import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import resolvers from "./resolvers";
 import { readFileSync } from "fs";
+import cors from "cors"
 
 
 // set up Mongo
@@ -44,6 +45,10 @@ const server = new ApolloServer({
 });
 // Note you must call `start()` on the `ApolloServer`
 // instance before passing the instance to `expressMiddleware`
+async function startApolloServer() {
+  await server.start();
+}
+
 
 const DISABLE_SECURITY = process.env.DISABLE_SECURITY
 
@@ -98,25 +103,32 @@ passport.deserializeUser((user, done) => {
 })
 
 
-
-
-
 // app routes
-app.post(
-  "/api/logout", 
-  (req, res, next) => {
-    req.logout((err) => {
-      if (err) {
-        return next(err)
-      }
-      res.redirect("/")
-    })
-  }
-)
-
-app.get("/api/user", (req, res) => {
-  res.json(req.user || {})
+startApolloServer().then(() => {
+  app.use(
+    '/graphql',
+    cors(),
+    express.json(),
+    expressMiddleware(server),
+  );
+  
+  app.post(
+    "/api/logout", 
+    (req, res, next) => {
+      req.logout((err) => {
+        if (err) {
+          return next(err)
+        }
+        res.redirect("/")
+      })
+    }
+  )
+  
+  app.get("/api/user", (req, res) => {
+    res.json(req.user || {})
+  })
 })
+
 
 // connect to Mongo
 client.connect().then(() => {
@@ -178,11 +190,11 @@ client.connect().then(() => {
 
     // start server
     // server.listen(port)
-    server.start()
     app.listen(port, () => {
       console.log(`Server is running on port: ${port}`)
     })
     // logger.info(`Game server listening on port ${port}`)
+    
   })
 })
 

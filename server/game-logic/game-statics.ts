@@ -102,9 +102,11 @@ export const shuffleDeck = (deck: string[]) => {
 
 // validate words
 import fs from 'fs';
+import path from 'path';
 // Load the Scrabble words into a Set
 const legalWords = new Set();
-fs.readFileSync('legalWords.txt', 'utf8')
+const filePath = path.join(__dirname, 'legalWords.txt');
+fs.readFileSync(filePath, 'utf8')
     .split('\n')
     .forEach(word => legalWords.add(word.trim().toUpperCase()));
 
