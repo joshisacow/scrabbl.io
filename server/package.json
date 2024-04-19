@@ -12,11 +12,6 @@
     "esbuild-plugin-pino": "^1.2.6",
     "express": "^4.18.2",
     "express-pino-logger": "^7.0.0",
-<<<<<<< HEAD
-    "graphql": "^16.8.1",
-    "graphql-tag": "^2.12.6",
-    "pino-pretty": "^9.1.0",
-=======
     "express-session": "^1.17.3",
     "http-proxy": "^1.18.1",
     "mongodb": "^4.12.0",
@@ -24,7 +19,6 @@
     "passport": "^0.7.0",
     "passport-custom": "^1.1.1",
     "pino-pretty": "^9.1.1",
->>>>>>> bdfc7e40300fe26409ac0a3286d7ca5611484caf
     "socket.io": "^4.5.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.7.4"
