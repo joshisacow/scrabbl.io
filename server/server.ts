@@ -183,7 +183,7 @@ client.connect().then(() => {
     //   })
     // )    
     app.get('/api/login-callback', passport.authenticate(passportStrategies, {
-      successReturnToOrRedirect: '/',
+      successReturnToOrRedirect: '/new-game',
       failureRedirect: '/',
     }))
     

@@ -1,5 +1,5 @@
 {
-  "name": "oidc-card-game-ui",
+  "name": "lecture23-composables",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,11 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apollo/client": "^3.9.10",
+    "@vue/apollo-composable": "^4.0.2",
     "@vue/compat": "^3.4.21",
+    "@vueuse/core": "^10.9.0",
     "bootstrap-vue": "^2.23.1",
-    "socket.io-client": "^4.7.4",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
     "vue": "^3.4.21",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",

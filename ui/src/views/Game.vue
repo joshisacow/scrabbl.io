@@ -68,6 +68,42 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useQuery, useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag'
+
+
+const GET_GAME_STATE = gql`
+  query GetGameState($gameId: ID!) {
+    gameState(gameId: $gameId) {
+      board
+      players {
+        name
+        hand
+        score
+      }
+      currentPlayerIndex
+      deck
+    }
+  }
+`;
+
+const PERFORM_ACTION = gql`
+  mutation PerformAction($gameId: ID!, $action: Action!) {
+    doAction(gameId: $gameId, action: $action) {
+      board
+      players {
+        score
+      }
+    }
+  }
+`;
+
+// Assume you have the gameId from somewhere
+const gameId = 'your-game-id';
+
+// Use the queries and mutations
+const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
+const { mutate: performAction } = useMutation(PERFORM_ACTION);
 
 // Types for board tiles and tiles in hand
 type BoardTile = {
@@ -81,16 +117,7 @@ type RackTile = {
 }
 
 // Initialize the tiles in your hand
-const myTiles = ref<RackTile[]>([
-  { letter: 'A' },
-  { letter: 'B' },
-  { letter: 'C' },
-  { letter: 'D' },
-  { letter: 'E' },
-  { letter: 'F' },
-  { letter: 'G' },
-  { letter: 'H' },
-]);
+const myTiles = ref([]);
 
 const boardMap = [
   ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
@@ -134,6 +161,13 @@ const playerScores = ref({
   // Add more players if needed
 });
 
+// Watch the gameState and update local state accordingly
+// watch(() => gameState.value, (newState) => {
+//   if (newState) {
+//     // Update your local state with data from the GraphQL query
+//     myTiles.value = newState.players[0].hand; // Example for the first player's hand
+//   }
+// }, { deep: true });
 
 const selectedTile = ref<RackTile | null>(null);
 const selectedIndex = ref<number | null>(null);
@@ -204,10 +238,21 @@ function swapTiles() {
   // Implement the logic for swapping tiles
 }
 
-function submitWord() {
-  console.log('Player submitted a word');
-  // Implement the logic for word submission
-}
+const submitWord = async () => {
+  // Prepare the action input based on your schema
+  const action = {
+    action: 'PLAY',
+    playerIndex: 0, // assuming you are player 1
+    potentialTiles: myTiles.value.map(tile => tile.letter),
+    // Add more details as required by your Action input
+  };
+
+  try {
+    await performAction({ gameId, action });
+  } catch (error) {
+    console.error("Error performing action:", error);
+  }
+};
 
 </script>
 
@@ -223,24 +268,16 @@ function submitWord() {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* height: 90vh;
-  width: 100vw; */
   background-color: #e0e0e0;
-  /* Light grey background for the entire game board area */
   max-width: 100vw;
-  /* Ensures the container does not exceed the width of the viewport */
   margin: 0 auto;
-  /* Centers the container */
   position: relative;
-  /* Context for absolute positioning of children */
-
 }
 
 .game-container {
   flex-grow: 1;
   width: 95%;
   max-width: 1200px;
-  /* Max width can be adjusted */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -257,11 +294,10 @@ function submitWord() {
 .game-board {
   max-width: 100%;
   display: grid;
-  /* grid-template-columns: repeat(15, auto); Based on 15 tiles per row */
 }
 
 .info-section {
-  margin-bottom: 1rem; /* Spacing between info sections */
+  margin-bottom: 1rem; 
 }
 
 .info-sections {
@@ -273,14 +309,11 @@ function submitWord() {
 .board-row {
   display: flex;
   flex-wrap: wrap;
-  /* Allow tiles to wrap onto the next line */
 }
 
 .board-tile {
   width: 2.5vw;
-  /* Use viewport width to size tiles */
   height: 2.5vw;
-  /* Keep the tiles square */
   border: 1px solid #000;
   display: flex;
   justify-content: center;
@@ -288,10 +321,7 @@ function submitWord() {
   font-size: 15px;
   cursor: pointer;
   background-color: #fff;
-  /* White background for empty tiles */
   box-shadow: inset 0 0 5px #bbb;
-  /* Subtle inner shadow for an engraved look */
-
 }
 
 
@@ -304,21 +334,19 @@ function submitWord() {
 }
 
 .tile-rack {
-  display: flex; /* Aligns tiles horizontally */
-  justify-content: center; /* Aligns tiles to the start */
-  flex-wrap: nowrap; /* Prevents wrapping, you can change to wrap if needed */
-  overflow-x: auto; /* Adds horizontal scroll if tiles overflow */
+  display: flex;
+  justify-content: center; 
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 @media (max-width: 768px) {
   .game-board {
     grid-template-columns: repeat(15, 1fr);
-    /* Full-width tiles on mobile */
   }
 
   .board-tile {
     width: 5vw;
-    /* Increase tile size on smaller screens */
     height: 5vw;
   }
 
@@ -329,12 +357,10 @@ function submitWord() {
 
   .action-buttons {
     grid-template-columns: 1fr;
-    /* Stack buttons on mobile */
   }
 
   .tile-rack-container {
     padding-bottom: 60px;
-    /* Ensure visible above mobile browsers' UI */
   }
 }
 
@@ -352,7 +378,6 @@ function submitWord() {
   margin-right: 10px;
 }
 
-/* Highlight the selected tile */
 .rack-tile.selected {
   border: 2px solid blue;
 }
@@ -366,45 +391,27 @@ function submitWord() {
 
 .placed-tile {
   background-color: peachpuff;
-  /* Lighter color for placed tiles, still different from the board */
   box-shadow: inset 0 0 5px #bbb, 0 0 10px #666;
-  /* Embossed effect with outer shadow for visibility */
 }
 
 .tile-letter {
   font-weight: bold;
   color: #333;
-  /* Dark color for the letter for better visibility */
 }
 
 .player-scores {
-  /* width: 28%;
-  height: 30%;
-  position: absolute;
-  top: 80px;
-  right: 10px; */
   background-color: #f4f4f4;
   padding: 10px;
   border-radius: 20px;
 }
 
 .turn-history {
-  /* position: absolute;
-  top: 300px;
-  left: 10px; */
-  /* width: auto;
-  height: 30%; */
   background-color: #f4f4f4;
   padding: 10px;
   border-radius: 20px;
 }
 
 .tile-bag {
-  /* width: 28%;
-  height: 30%; */
-  /* position: absolute;
-  top: 80px;
-  left: 10px; */
   background-color: #f4f4f4;
   padding: 10px;
   border-radius: 20px;
@@ -421,22 +428,17 @@ function submitWord() {
   padding: 10px;
   font-size: 1rem;
   cursor: pointer;
-  /* Add more styling as desired */
-  /* Consider adding width/height to make buttons of equal size */
-  width: auto; /* Makes buttons expand to fill the cell */
-  /* Add equal height or min-height to ensure square buttons if desired */
+  width: auto; 
 }
 
 .button-row {
   display: contents;
-  /* Makes .button-row act as a wrapper without affecting the grid */
 }
 
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(2, auto); /* Creates a 2-column grid */
-  gap: 5px; /* Adjust space between buttons */
-  /* Add padding/margin as needed */
+  grid-template-columns: repeat(2, auto); 
+  gap: 5px;
 }
 
 

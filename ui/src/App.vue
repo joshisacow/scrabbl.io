@@ -17,6 +17,20 @@
 
 <script setup lang="ts">
 import { onMounted, ref, provide } from 'vue'
+import { DefaultApolloClient } from '@vue/apollo-composable'
+import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
+
+const httpLink = createHttpLink({
+  // see https://studio.apollographql.com/public/SpaceX-pxxbxen/variant/current/home
+  uri: 'http://127.0.0.1:8228/graphql',
+})
+const cache = new InMemoryCache()
+const apolloClient = new ApolloClient({
+  link: httpLink,
+  cache,
+})
+
+provide(DefaultApolloClient, apolloClient)
 
 const user = ref({} as any)
 provide("user", user)
