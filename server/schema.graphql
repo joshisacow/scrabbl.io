@@ -1,0 +1,39 @@
+type Player {
+    name: String!
+    hand: [String]
+    score: Int
+}
+
+type GameState {
+    board: [[String]]
+    players: [Player]
+    currentPlayerIndex: Int
+    deck: [String]
+}
+
+enum ActionType {
+    PLAY
+    RESIGN
+    SWAP_TILES
+    SKIP_TURN
+}
+
+input Action {
+    action: ActionType!
+    playerIndex: Int
+    potentialTiles: [String]
+    locations: [[Int]]
+}
+
+input Config {
+    playerCount: Int
+    board: Int
+    playerNames: [String]
+}
+
+type Mutation {
+    createGame: ID
+    joinGame(gameId: ID!, playerName: String!): Boolean 
+    startGame(gameId: ID!, config: Config!): GameState
+    doAction(gameId: ID!, action: Action): GameState
+}
