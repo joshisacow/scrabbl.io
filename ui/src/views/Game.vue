@@ -305,7 +305,7 @@ function submitWord() {
 
 .tile-rack {
   display: flex; /* Aligns tiles horizontally */
-  justify-content: start; /* Aligns tiles to the start */
+  justify-content: center; /* Aligns tiles to the start */
   flex-wrap: nowrap; /* Prevents wrapping, you can change to wrap if needed */
   overflow-x: auto; /* Adds horizontal scroll if tiles overflow */
 }
