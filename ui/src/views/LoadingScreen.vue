@@ -29,7 +29,7 @@ const props = defineProps({
 
 const gameID = ref(props.gameId);
 
-console.log("Printing gameID:", gameID.value);
+console.log("Loading Screen gameID recieved:", gameID.value);
 
 </script>
 
