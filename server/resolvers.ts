@@ -1,5 +1,5 @@
 import { GameState, GameObject, Action, createNewGame, Config } from './game-logic/game-model'
-import { gameStates, users } from './server'
+import { gameStates, users, waitingRooms } from './server'
 import { ObjectId } from 'mongodb'
 
 const fetchGameState = async (gameId: string): Promise<GameState> => {
@@ -25,13 +25,28 @@ const saveGameState = async (gameId: string, state: GameState) => {
 
 const resolvers = {
     Mutation: {
-        createGame: async (_: any, args: any) => {
-            console.log("createGame", args)
-            return args
+        createGame: async (_: any, { config }: { config: Config }) => {
+            console.log("createGame", config)
+            const min = 1000;
+            const max = 9999;
+            var randomNumber = (Math.floor(Math.random() * (max - min + 1)) + min).toString();
+            while (await waitingRooms.findOne({ gameId: randomNumber })) {
+                randomNumber = (Math.floor(Math.random() * (max - min + 1)) + min).toString();
+            }
+            await waitingRooms.insertOne({ gameId: randomNumber, config: config })
+            return randomNumber
         },
-        joinGame: async (_: any, args: any) => {
-            console.log("joinGame", args)
-            return args
+        joinGame: async (_: any, { gameId, playerName }: { gameId: string, playerName: string }) => {
+            console.log("joinGame", gameId, playerName)
+            if (!await waitingRooms.findOne({ gameId: gameId })) {
+                return false
+            }
+            // TODO: add checks for player count
+            await waitingRooms.updateOne(
+                { gameId: gameId },
+                { $push: { 'config.playerNames': playerName } }
+            )
+            return true
         },
         startGame: async (_: any, { gameId, config }: { gameId: string, config: Config }) => {
             console.log("startGame", gameId)

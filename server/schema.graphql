@@ -32,7 +32,7 @@ input Config {
 }
 
 type Mutation {
-    createGame: ID
+    createGame(config: Config!): ID
     joinGame(gameId: ID!, playerName: String!): Boolean 
     startGame(gameId: ID!, config: Config!): GameState
     doAction(gameId: ID!, action: Action): GameState

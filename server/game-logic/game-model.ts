@@ -21,7 +21,7 @@ export interface Action {
   potentialTiles?: string[],
   locations?: [number, number][],
 }
-const emptySpaces = ["    ", "DWS", "TWS", "DLS", "TLS"]
+const emptySpaces = ["    ", "DWS", "TWS", "DLS", "TLS", "STAR"]
 
 export interface GameObject {
   board: string[][]
@@ -194,7 +194,7 @@ export class GameState {
           score += letterValues[tempBoard[i1][j]]
         } else if (this.board[i1][j] === "TLS") {
           score += 2 * letterValues[tempBoard[i1][j]]
-        } else if (this.board[i1][j] === "DWS") {
+        } else if (this.board[i1][j] === "DWS" || this.board[i1][j] === "STAR") {
           multiplier *= 2
         } else if (this.board[i1][j] === "TWS") {
           multiplier *= 3
@@ -208,7 +208,7 @@ export class GameState {
           score += letterValues[tempBoard[i][j1]]
         } else if (this.board[i][j1] === "TLS") {
           score += 2 * letterValues[tempBoard[i][j1]]
-        } else if (this.board[i][j1] === "DWS") {
+        } else if (this.board[i][j1] === "DWS" || this.board[i][j1] === "STAR") {
           multiplier *= 2
         } else if (this.board[i][j1] === "TWS") {
           multiplier *= 3

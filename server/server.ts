@@ -25,6 +25,7 @@ const client = new MongoClient(mongoUrl)
 let db: Db
 let gameStates: Collection
 let users: Collection
+let waitingRooms: Collection
 
 // set up Express
 const app = express()
@@ -136,9 +137,7 @@ client.connect().then(() => {
   db = client.db("test")
   gameStates = db.collection('game-states')
   users = db.collection('users')
-  // operators = db.collection('operators')
-  // orders = db.collection('orders')
-  // customers = db.collection('customers')
+  waitingRooms = db.collection('waiting-rooms')
 
   Issuer.discover("https://coursework.cs.duke.edu/").then(issuer => {
     const client = new issuer.Client(gitlab)
@@ -198,4 +197,4 @@ client.connect().then(() => {
   })
 })
 
-export { gameStates, users }
+export { gameStates, users, waitingRooms }
