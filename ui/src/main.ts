@@ -38,8 +38,10 @@ const routes = [
     component: NewGame,
   },
   {
-    path: "/loading-screen",
+    path: "/loading-screen/:gameId",
+    name: 'LoadingScreen',
     component: LoadingScreen,
+    props: true
   }
 ]
 

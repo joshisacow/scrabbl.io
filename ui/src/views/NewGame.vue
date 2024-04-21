@@ -101,7 +101,11 @@ const startNewGame = async () => {
       });
       console.log('Game started successfully:', data.startGame);
       // Redirect or handle new game start success
-      router.push({ name: 'LoadingScreen', params: { gameId: data.startGame.id } });
+    //   router.push('/loading-screen'); 
+    // console.log("Printing gameID:", 1234)
+    router.push({ name: 'LoadingScreen', params: { gameId: "1234" } });
+
+      
     } catch (error) {
       console.error('Error starting new game:', error);
     }
