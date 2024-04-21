@@ -1,6 +1,5 @@
 import { GameState, GameObject, Action, createNewGame, Config } from './game-logic/game-model'
 import { gameStates, users, waitingRooms } from './server'
-import { ObjectId } from 'mongodb'
 
 const fetchGameState = async (gameId: string): Promise<GameState> => {
     const state = await gameStates.findOne({ gameId: gameId })
@@ -38,19 +37,21 @@ const resolvers = {
         },
         joinGame: async (_: any, { gameId, playerName }: { gameId: string, playerName: string }) => {
             console.log("joinGame", gameId, playerName)
-            if (!await waitingRooms.findOne({ gameId: gameId })) {
-                return false
+            const room = await waitingRooms.findOne({ gameId: gameId })
+            if (room && room.config.playerNames.length < room.config.playerCount && !room.config.playerNames.includes(playerName)) {
+                await waitingRooms.updateOne(
+                    { gameId: gameId },
+                    { $push: { 'config.playerNames': playerName } }
+                )
+                return true
             }
-            // TODO: add checks for player count
-            await waitingRooms.updateOne(
-                { gameId: gameId },
-                { $push: { 'config.playerNames': playerName } }
-            )
-            return true
+            return false
         },
-        startGame: async (_: any, { gameId, config }: { gameId: string, config: Config }) => {
+        startGame: async (_: any, { gameId }: { gameId: string }) => {
             console.log("startGame", gameId)
-            const state = createNewGame(config)
+            const room = await waitingRooms.findOne({ gameId: gameId })
+            console.log(room)
+            const state = createNewGame(room.config)
             await saveGameState(gameId, state)
             return state
         },

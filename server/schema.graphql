@@ -34,6 +34,6 @@ input Config {
 type Mutation {
     createGame(config: Config!): ID
     joinGame(gameId: ID!, playerName: String!): Boolean 
-    startGame(gameId: ID!, config: Config!): GameState
+    startGame(gameId: ID!): GameState
     doAction(gameId: ID!, action: Action): GameState
 }
