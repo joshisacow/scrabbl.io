@@ -21,7 +21,7 @@ export interface Action {
   potentialTiles?: string[],
   locations?: [number, number][],
 }
-const emptySpaces = ["    ", "2xWS", "3xWS", "2xLS", "3xLS"]
+const emptySpaces = ["    ", "DWS", "TWS", "DLS", "TLS"]
 
 export interface GameObject {
   board: string[][]
@@ -190,13 +190,13 @@ export class GameState {
       for (let j = j1; j <= j2; j++) {
         word += tempBoard[i1][j]
         score += letterValues[tempBoard[i1][j]]
-        if (this.board[i1][j] === "2xLS") {
+        if (this.board[i1][j] === "DLS") {
           score += letterValues[tempBoard[i1][j]]
-        } else if (this.board[i1][j] === "3xLS") {
+        } else if (this.board[i1][j] === "TLS") {
           score += 2 * letterValues[tempBoard[i1][j]]
-        } else if (this.board[i1][j] === "2xWS") {
+        } else if (this.board[i1][j] === "DWS") {
           multiplier *= 2
-        } else if (this.board[i1][j] === "3xWS") {
+        } else if (this.board[i1][j] === "TWS") {
           multiplier *= 3
         }
       }
@@ -204,13 +204,13 @@ export class GameState {
       for (let i = i1; i <= i2; i++) {
         word += tempBoard[i][j1]
         score += letterValues[tempBoard[i][j1]]
-        if (this.board[i][j1] === "2xLS") {
+        if (this.board[i][j1] === "DLS") {
           score += letterValues[tempBoard[i][j1]]
-        } else if (this.board[i][j1] === "3xLS") {
+        } else if (this.board[i][j1] === "TLS") {
           score += 2 * letterValues[tempBoard[i][j1]]
-        } else if (this.board[i][j1] === "2xWS") {
+        } else if (this.board[i][j1] === "DWS") {
           multiplier *= 2
-        } else if (this.board[i][j1] === "3xWS") {
+        } else if (this.board[i][j1] === "TWS") {
           multiplier *= 3
         }
       }
@@ -258,10 +258,10 @@ export function createNewGame(config: Config): GameState {
   return new GameState(board, players, currentPlayerIndex, deck)
 }
 
-const config: Config = {
-  playerCount: 2,
-  board: 0,
-  playerNames: ["a", "b"]
-}
-createNewGame(config)
+// const config: Config = {
+//   playerCount: 2,
+//   board: 0,
+//   playerNames: ["a", "b"]
+// }
+// createNewGame(config)
 
