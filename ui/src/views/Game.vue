@@ -23,9 +23,11 @@
           <div v-for="(row, rowIndex) in board" :key="'row-' + rowIndex" class="board-row">
             <div v-for="(tile, colIndex) in row" :key="'tile-' + rowIndex + '-' + colIndex" class="board-tile"
               :class="{ 'placed-tile': tile.isPlaced, [tile.type]: true }"
-              @click="placeOrPickupTile(rowIndex, colIndex)">
+              @click="placeOrPickupTile(rowIndex, colIndex)"
+            >
               <span v-if="tile.letter" class="tile-letter">{{ tile.letter }}</span>
-              <span v-if="!tile.letter && tile.type !== 'normal'" class="tile-score">{{ tile.type }}</span>
+              <span v-if="!tile.letter && tile.type !== 'normal' && tile.type !== 'STAR'" class="tile-score">{{ tile.type }}</span>
+              <span v-if="tile.type === 'STAR'"><font-awesome-icon :icon="['fas', 'star']" /></span>
             </div>
           </div>
         </div>
@@ -70,6 +72,9 @@
 import { ref } from 'vue'
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+// import { byPrefixAndName } from '@awesome.me/kit-KIT_CODE/icons'
+
 
 
 const GET_GAME_STATE = gql`
@@ -137,7 +142,7 @@ const boardMap = [
   ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
   ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
   ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
-  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
+  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'STAR', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
   ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
   ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
   ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
@@ -146,6 +151,7 @@ const boardMap = [
   ['    ', 'DWS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'DWS', '    '],
   ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
 ];
+
 
 // We use the map created above to initialize the board
 const board = ref<BoardTile[][]>(boardMap.map(row => row.map(type => ({
