@@ -47,7 +47,7 @@ const initialLetters = {
     "X": { "points":  8, "tiles":  1 },
     "Y": { "points":  4, "tiles":  2 },
     "Z": { "points": 10, "tiles":  1 },
-    "": { "points": 0, "tiles": 2}
+    " ": { "points": 0, "tiles": 2}
 }
 
 export const letterValues: { [key: string]: number } = {
@@ -80,12 +80,15 @@ export const letterValues: { [key: string]: number } = {
     "Z": 10 
 }
 
-export const newDeck = () => {
+export const newDeck = (blankTiles: boolean) => {
     let letters = []
     for (const [letter, value] of Object.entries(initialLetters)) {
         for (let i = 0; i < value.tiles; i++) {
             letters.push(letter)
         }
+    }
+    if (!blankTiles) {
+        letters.filter(e => e !== " ")
     }
     const deck = shuffleDeck(letters);
     return deck;

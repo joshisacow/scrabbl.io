@@ -34,13 +34,15 @@ export class GameState {
   players: Player[]
   currentPlayerIndex: number
   deck: string[]
+  swap: boolean
   // phase: GamePhase
 
-  constructor(board: string[][], players: Player[], currentPlayerIndex: number, deck: string[]) {
+  constructor(board: string[][], players: Player[], currentPlayerIndex: number, deck: string[], swap: boolean) {
     this.board = board
     this.players = players
     this.currentPlayerIndex = currentPlayerIndex
     this.deck = deck
+    this.swap = swap
   }
 
 
@@ -54,6 +56,9 @@ export class GameState {
         return "Invalid play"
       }
     } else if (action.action === "SWAP_TILES") {
+      if (!this.swap) {
+        return "Swap Tiles not allowed"
+      }
       this.swapTiles(action.playerIndex, action.potentialTiles)
     } else if (action.action === "RESIGN") {
       this.resign(action.playerIndex)
@@ -244,6 +249,8 @@ export interface Config {
   playerCount: number
   board: number
   playerNames: string[]
+  blankTiles: boolean
+  swap: boolean
 }
 
 export function createNewGame(config: Config): GameState {
@@ -253,9 +260,9 @@ export function createNewGame(config: Config): GameState {
   const board = JSON.parse(JSON.stringify(possibleBoards[config.board]))
   const players = config.playerNames.map(name => new Player(name))
   const currentPlayerIndex = Math.floor(Math.random() * players.length)
-  var deck = newDeck()
+  var deck = newDeck(config.blankTiles)
   dealCards(players, deck)
-  return new GameState(board, players, currentPlayerIndex, deck)
+  return new GameState(board, players, currentPlayerIndex, deck, config.swap)
 }
 
 // const config: Config = {

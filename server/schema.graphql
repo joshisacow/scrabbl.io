@@ -9,6 +9,7 @@ type GameState {
     players: [Player]
     currentPlayerIndex: Int
     deck: [String]
+    swap: Boolean
 }
 
 enum ActionType {
@@ -29,6 +30,8 @@ input Config {
     playerCount: Int
     board: Int
     playerNames: [String]
+    blankTiles: Boolean
+    swap: Boolean
 }
 
 type Mutation {

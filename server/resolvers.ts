@@ -1,4 +1,4 @@
-import { GameState, GameObject, Action, createNewGame, Config } from './game-logic/game-model'
+import { GameState, Action, createNewGame, Config } from './game-logic/game-model'
 import { gameStates, users, waitingRooms } from './server'
 
 const fetchGameState = async (gameId: string): Promise<GameState> => {
@@ -6,7 +6,7 @@ const fetchGameState = async (gameId: string): Promise<GameState> => {
     if (!state) {
         throw new Error("Game not found")
     }
-    return new GameState(state.board, state.players, state.currentPlayerIndex, state.deck)
+    return new GameState(state.board, state.players, state.currentPlayerIndex, state.deck, state.swap)
 }
 
 const saveGameState = async (gameId: string, state: GameState) => {
@@ -16,7 +16,8 @@ const saveGameState = async (gameId: string, state: GameState) => {
             board: state.board,
             players: state.players,
             currentPlayerIndex: state.currentPlayerIndex,
-            deck: state.deck
+            deck: state.deck,
+            swap: state.swap
         } },
         { upsert: true }
     )
