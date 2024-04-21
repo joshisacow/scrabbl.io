@@ -473,6 +473,11 @@ const submitWord = async () => {
   background-color: #9fc5e8;
 }
 
+.STAR {
+  background-color: #9fc5e8;
+  color: #fff;
+}
+
 .placed-tile {
   background-color: peachpuff;
   box-shadow: inset 0 0 5px #bbb, 0 0 10px #666;

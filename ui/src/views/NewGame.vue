@@ -27,6 +27,9 @@
 import { ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
+import { useRouter } from 'vue-router'; // Import the useRouter function
+const router = useRouter(); // Instantiate the router
+
 
 const newGameOptions = ref({
     language: 'en',
@@ -98,6 +101,7 @@ const startNewGame = async () => {
       });
       console.log('Game started successfully:', data.startGame);
       // Redirect or handle new game start success
+      router.push({ name: 'LoadingScreen', params: { gameId: data.startGame.id } });
     } catch (error) {
       console.error('Error starting new game:', error);
     }
