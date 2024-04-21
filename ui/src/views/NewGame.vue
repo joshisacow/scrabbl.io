@@ -24,61 +24,90 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue';
-  import { useMutation } from '@vue/apollo-composable';
-  import gql from 'graphql-tag';
-  
-//   const CREATE_GAME = gql`
-//     mutation CreateGame($config: Config!) {
-//       startGame(config: $config) {
-//         id
-//         // other fields as needed
-//       }
-//     }
-//   `;
-  
-  // Define your new game options model
-  const newGameOptions = ref({
-    language: 'English',
+import { ref } from 'vue';
+import { useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
+
+const newGameOptions = ref({
+    language: 'en',
     playerCount: 2,
-    boardType: 'Standard',
-    timeLimit: '30 minutes'
-  });
-  
-  // Define options for the select fields
-  const languageOptions = ['English', 'Spanish', 'French'];
-  const playerCountOptions = [2, 3, 4];
-  const boardTypeOptions = ['Standard', 'Deluxe', 'Travel'];
-  const timeLimitOptions = ['15 minutes', '30 minutes', '1 hour', 'No limit'];
-  
-  // Prepare the mutation
-//   const { mutate: createGame, onDone } = useMutation(CREATE_GAME);
-  
-  // Watch for the mutation result and react accordingly
-//   onDone(({ data, errors }) => {
-//     if (errors) {
-//       console.error('Errors creating the game:', errors);
-//     } else {
-//       // For example, navigate to the game page or display the game ID
-//       console.log('Game created successfully, game ID:', data.startGame.id);
-//     }
-//   });
-  
-  // The function to call when the form is submitted
-  const startNewGame = async () => {
+    boardType: 'standard',
+    timeLimit: 0,
+});
+
+const languageOptions = [
+    { value: 'en', text: 'English' },
+    { value: 'fr', text: 'French' },
+    { value: 'de', text: 'German' },
+];
+
+const playerCountOptions = [
+    { value: 2, text: '2 Players' },
+    { value: 3, text: '3 Players' },
+    { value: 4, text: '4 Players' },
+];
+
+const boardTypeOptions = [
+    { value: 'standard', text: 'Standard' },
+    { value: 'random', text: 'Random' },
+];
+
+const timeLimitOptions = [
+    { value: 0, text: 'No Time Limit' },
+    { value: 300, text: '5 Minutes' },
+    { value: 600, text: '10 Minutes' },
+    { value: 900, text: '15 Minutes' },
+];
+
+// GraphQL mutation
+const START_GAME = gql`
+  mutation StartGame($gameId: ID!, $config: Config!) {
+    startGame(gameId: $gameId, config: $config) {
+      board
+      players {
+        name
+        hand
+        score
+      }
+      currentPlayerIndex
+      deck
+    }
+  }
+`;
+
+const { mutate: startGameMutation } = useMutation(START_GAME);
+
+// Function to generate player names based on count
+function generatePlayerNames(count) {
+    return Array.from({ length: count }, (_, i) => `Player ${i + 1}`);
+}
+
+const startNewGame = async () => {
+    const config = {
+      playerCount: parseInt(newGameOptions.value.playerCount),
+      board: newGameOptions.value.boardType === 'standard' ? 0 : 1, // Assuming '0' for 'Standard' and '1' for 'Random'
+      playerNames: generatePlayerNames(parseInt(newGameOptions.value.playerCount)),
+    };
+
+    console.log('Starting game with config:', config);
+
     try {
-      await createGame({ config: newGameOptions.value });
+      const { data } = await startGameMutation({
+        gameId: "1234", // Replace with dynamic gameId if needed
+        config
+      });
+      console.log('Game started successfully:', data.startGame);
+      // Redirect or handle new game start success
     } catch (error) {
       console.error('Error starting new game:', error);
     }
-  };
-  </script>
+};
+</script>
+
   
   <style scoped>
   .new-game {
     padding-top: 2rem;
   }
-  
-  /* Add more styles as needed */
   </style>
   

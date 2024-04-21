@@ -117,7 +117,17 @@ type RackTile = {
 }
 
 // Initialize the tiles in your hand
-const myTiles = ref([]);
+const myTiles = ref<RackTile[]>([
+  { letter: 'A' },
+  { letter: 'B' },
+  { letter: 'C' },
+  { letter: 'D' },
+  { letter: 'E' },
+  { letter: 'F' },
+  { letter: 'G' },
+  { letter: 'H' },
+]);
+
 
 const boardMap = [
   ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
@@ -389,11 +399,6 @@ const submitWord = async () => {
   cursor: pointer;
 }
 
-.placed-tile {
-  background-color: peachpuff;
-  box-shadow: inset 0 0 5px #bbb, 0 0 10px #666;
-}
-
 .tile-letter {
   font-weight: bold;
   color: #333;
@@ -462,5 +467,9 @@ const submitWord = async () => {
   background-color: #9fc5e8;
 }
 
+.placed-tile {
+  background-color: peachpuff;
+  box-shadow: inset 0 0 5px #bbb, 0 0 10px #666;
+}
 /* Darker blue for Triple Letter Score */
 </style>

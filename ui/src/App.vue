@@ -22,7 +22,9 @@ import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core
 
 const httpLink = createHttpLink({
   // see https://studio.apollographql.com/public/SpaceX-pxxbxen/variant/current/home
+  // uri: 'https://spacex-production.up.railway.app/',
   uri: 'http://127.0.0.1:8228/graphql',
+  // uri: 'https://flyby-router-demo.herokuapp.com/'
 })
 const cache = new InMemoryCache()
 const apolloClient = new ApolloClient({

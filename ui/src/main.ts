@@ -12,6 +12,7 @@ import Login from './views/Login.vue'
 import NewGame from './views/NewGame.vue'
 
 
+
 const routes = [
   {
     path: "/",
@@ -35,6 +36,11 @@ const routes = [
   {
     path: "/new-game",
     component: NewGame,
+    // props (route) {
+    //   return {
+    //     playerIndex: route.params.playerIndex
+    //   }
+    // }
   }
 ]
 
