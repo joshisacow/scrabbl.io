@@ -63,53 +63,82 @@ const timeLimitOptions = [
 ];
 
 // GraphQL mutation
-const START_GAME = gql`
-  mutation StartGame($gameId: ID!, $config: Config!) {
-    startGame(gameId: $gameId, config: $config) {
-      board
-      players {
-        name
-        hand
-        score
-      }
-      currentPlayerIndex
-      deck
-    }
+// const START_GAME = gql`
+//   mutation StartGame($gameId: ID!, $config: Config!) {
+//     startGame(gameId: $gameId, config: $config) {
+//       board
+//       players {
+//         name
+//         hand
+//         score
+//       }
+//       currentPlayerIndex
+//       deck
+//     }
+//   }
+// `;
+
+// const { mutate: startGameMutation } = useMutation(START_GAME);
+const CREATE_GAME = gql`
+  mutation CreateGame($config: Config!) {
+    createGame(config: $config)
   }
 `;
 
-const { mutate: startGameMutation } = useMutation(START_GAME);
+const { mutate: createGameMutation } = useMutation(CREATE_GAME);
+
 
 // Function to generate player names based on count
 function generatePlayerNames(count) {
     return Array.from({ length: count }, (_, i) => `Player ${i + 1}`);
 }
 
-const startNewGame = async () => {
-    const config = {
-      playerCount: parseInt(newGameOptions.value.playerCount),
-      board: newGameOptions.value.boardType === 'standard' ? 0 : 1, // Assuming '0' for 'Standard' and '1' for 'Random'
-      playerNames: generatePlayerNames(parseInt(newGameOptions.value.playerCount)),
-    };
+// const startNewGame = async () => {
+//     const config = {
+//       playerCount: parseInt(newGameOptions.value.playerCount),
+//       board: newGameOptions.value.boardType === 'standard' ? 0 : 1, // Assuming '0' for 'Standard' and '1' for 'Random'
+//       playerNames: generatePlayerNames(parseInt(newGameOptions.value.playerCount)),
+//     };
 
-    console.log('Starting game with config:', config);
+//     console.log('Starting game with config:', config);
 
-    try {
-      const { data } = await startGameMutation({
-        gameId: "1234", // Replace with dynamic gameId if needed
-        config
-      });
-      console.log('Game started successfully:', data.startGame);
-      // Redirect or handle new game start success
-    //   router.push('/loading-screen'); 
-    // console.log("Printing gameID:", 1234)
-    router.push({ name: 'LoadingScreen', params: { gameId: "1234" } });
+//     try {
+//       const { data } = await startGameMutation({
+//         gameId: "1234", // Replace with dynamic gameId if needed
+//         config
+//       });
+//       console.log('Game started successfully:', data.startGame);
+//       // Redirect or handle new game start success
+//     //   router.push('/loading-screen'); 
+//     // console.log("Printing gameID:", 1234)
+//     router.push({ name: 'LoadingScreen', params: { gameId: "1234" } });
 
       
-    } catch (error) {
-      console.error('Error starting new game:', error);
-    }
+//     } catch (error) {
+//       console.error('Error starting new game:', error);
+//     }
+// };
+const startNewGame = async () => {
+  const config = {
+    playerCount: parseInt(newGameOptions.value.playerCount),
+    board: newGameOptions.value.boardType === 'standard' ? 0 : 1,
+    playerNames: generatePlayerNames(parseInt(newGameOptions.value.playerCount)),
+  };
+
+  console.log('Creating game with config:', config);
+
+  try {
+    const { data } = await createGameMutation({
+      config
+    });
+    const gameId = data.createGame;  // Assuming the mutation returns the game ID directly
+    console.log('Game created successfully, game ID:', gameId);
+    router.push({ name: 'LoadingScreen', params: { gameId } });
+  } catch (error) {
+    console.error('Error creating new game:', error);
+  }
 };
+
 </script>
 
   
