@@ -10,7 +10,7 @@ import App from './App.vue'
 import Game from './views/Game.vue'
 import Login from './views/Login.vue'
 import NewGame from './views/NewGame.vue'
-
+import LoadingScreen from './views/LoadingScreen.vue'
 
 
 const routes = [
@@ -36,11 +36,10 @@ const routes = [
   {
     path: "/new-game",
     component: NewGame,
-    // props (route) {
-    //   return {
-    //     playerIndex: route.params.playerIndex
-    //   }
-    // }
+  },
+  {
+    path: "/loading-screen",
+    component: LoadingScreen,
   }
 ]
 
