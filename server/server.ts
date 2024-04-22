@@ -113,6 +113,11 @@ startApolloServer().then(() => {
     expressMiddleware(server),
   );
   
+  // sample empty route
+  app.use('/', (req, res) => {
+    res.send('Hello World!')
+  })
+
   app.post(
     "/api/logout", 
     (req, res, next) => {
