@@ -24,15 +24,11 @@ const routes = [
     // }
   },
   {
-    path: "/game",
+    path: "/game/:gameId",
+    name: "Game",
     component: Game,
-    // props (route) {
-    //   return {
-    //     playerIndex: route.params.playerIndex
-    //   }
-    // }
-  
-  },
+    props: true // This will pass all route params as props to the Game component
+  }  ,
   {
     path: "/new-game",
     component: NewGame,

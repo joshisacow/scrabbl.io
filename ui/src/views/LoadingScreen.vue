@@ -11,66 +11,67 @@
   </template>
   
   <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useQuery, useMutation } from '@vue/apollo-composable';
-import gql from 'graphql-tag';
-
-const router = useRouter();
-const route = useRoute();
-const gameId = route.params.gameId;
-
-const gameStateQuery = gql`
-  query GameState($gameId: ID!) {
-    gameState(gameId: $gameId) {
-      currentPlayerIndex
-      players {
-        name
+  import { onMounted, onUnmounted, ref } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
+  import { useQuery, useMutation } from '@vue/apollo-composable';
+  import gql from 'graphql-tag';
+  
+  const router = useRouter();
+  const route = useRoute();
+  const gameId = route.params.gameId;
+  
+  const gameStateQuery = gql`
+    query GameState($gameId: ID!) {
+      gameState(gameId: $gameId) {
+        currentPlayerIndex
+        players {
+          name
+        }
       }
     }
-  }
-`;
-
-const startGameMutation = gql`
-  mutation StartGame($gameId: ID!) {
-    startGame(gameId: $gameId) {
-      board
-      players {
-        name
-        hand
-        score
+  `;
+  
+  const startGameMutation = gql`
+    mutation StartGame($gameId: ID!) {
+      startGame(gameId: $gameId) {
+        board
+        players {
+          name
+          hand
+          score
+        }
+        currentPlayerIndex
+        deck
       }
-      currentPlayerIndex
-      deck
     }
-  }
-`;
-
-const { loading, error, data } = useQuery(gameStateQuery, {
-  variables: { gameId },
-});
-
-const { mutate: startGame } = useMutation(startGameMutation, {
-  variables: { gameId }
-});
-
-// Polling mechanism to check if all players are connected
-const checkStartCondition = () => {
-  if (!loading.value && data.value && data.value.gameState.players.length === data.value.gameState.playerCount) {
-    startGame().then(({ data }) => {
-      router.push(`/game/${gameId}`);
-    }).catch((err) => {
-      console.error('Error starting the game:', err);
-    });
-  }
-};
-
-const pollingInterval = ref(null);
-onMounted(() => {
-  pollingInterval.value = setInterval(checkStartCondition, 3000);
-});
-
-onUnmounted(() => {
-  if (pollingInterval.value) clearInterval(pollingInterval.value);
-});
-</script>
+  `;
+  
+  const { loading, error, data } = useQuery(gameStateQuery, {
+    variables: { gameId },
+  });
+  
+  const { mutate: startGame } = useMutation(startGameMutation, {
+    variables: { gameId }
+  });
+  
+  // Polling mechanism to check if all players are connected
+  const checkStartCondition = () => {
+    if (!loading.value && data?.value && data.value.gameState && data.value.gameState.players.length === data.value.gameState.playerCount) {
+      startGame().then(({ data }) => {
+        router.push(`/game/${gameId}`);
+      }).catch((err) => {
+        console.error('Error starting the game:', err);
+      });
+    }
+  };
+  
+  const pollingInterval = ref(null);
+  onMounted(() => {
+    // Set the polling interval to 5000 milliseconds (5 seconds)
+    pollingInterval.value = setInterval(checkStartCondition, 5000);
+  });
+  
+  onUnmounted(() => {
+    if (pollingInterval.value) clearInterval(pollingInterval.value);
+  });
+  </script>

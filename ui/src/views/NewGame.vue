@@ -96,6 +96,7 @@ const CREATE_GAME = gql`
 const { mutate: createGameMutation } = useMutation(CREATE_GAME);
 
 
+
 // Function to generate player names based on count
 function generatePlayerNames(count) {
   return Array.from({ length: count }, (_, i) => `Player ${i + 1}`);
@@ -131,24 +132,24 @@ const startNewGame = async () => {
   const config = {
     playerCount: parseInt(newGameOptions.value.playerCount),
     board: newGameOptions.value.boardType === 'standard' ? 0 : 1,
-    playerNames: generatePlayerNames(parseInt(newGameOptions.value.playerCount)),
+    playerNames: [user.value.preferred_username], // Ensure username is correctly retrieved
     blankTiles: newGameOptions.value.blankTiles,
     swap: newGameOptions.value.swap,
   };
 
-  console.log('Creating game with config:', config);
+  console.log('Creating game with config:', config); // Check if this logs
 
   try {
     const { data } = await createGameMutation({
       config
     });
-    const gameId = data.createGame;  // Assuming the mutation returns the game ID directly
-    console.log('Game created successfully, game ID:', gameId);
-    router.push({ name: 'LoadingScreen', params: { gameId } });
+    console.log('Game created successfully, game ID:', data.createGame); // Check this log
+    router.push({ name: 'LoadingScreen', params: { gameId: data.createGame } });
   } catch (error) {
     console.error('Error creating new game:', error);
   }
 };
+
 
 const JOIN_GAME = gql`
   mutation JoinGame($gameId: ID!, $playerName: String!) {
@@ -163,10 +164,11 @@ const joinGame = async () => {
     const playerName = user.value.preferred_username; // This should be dynamically obtained or entered by the user
     const { data } = await joinGameMutation({
       gameId: gameId.value,
-      playerName
+      playerName: playerName,
     });
     if (data.joinGame) {
-      router.push({ name: 'Game', params: { gameId: gameId.value } });
+      console.error('Successfully joined game:', gameId.value);
+      router.push({ name: 'LoadingScreen', params: { gameId: gameId.value } });
     } else {
       console.error('Joining game failed or game is full.');
     }

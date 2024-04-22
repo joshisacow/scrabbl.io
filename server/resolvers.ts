@@ -39,6 +39,7 @@ const resolvers = {
                 randomNumber = (Math.floor(Math.random() * (max - min + 1)) + min).toString();
             }
             await waitingRooms.insertOne({ gameId: randomNumber, config: config })
+            console.log("Game created", randomNumber)
             return randomNumber
         },
         joinGame: async (_: any, { gameId, playerName }: { gameId: string, playerName: string }) => {
