@@ -41,6 +41,22 @@ type Mutation {
     doAction(gameId: ID!, action: Action): GameState
 }
 
+
+type ConfigOutput {
+  playerCount: Int
+  board: Int
+  playerNames: [String]
+  blankTiles: Boolean
+  swap: Boolean
+}
+
+type WaitingRoom {
+  gameId: ID!
+  config: ConfigOutput
+  players: [String]
+}
+
 type Query {
   gameState(gameId: ID!): GameState
+  waitingRoom(gameId: ID!): WaitingRoom
 }

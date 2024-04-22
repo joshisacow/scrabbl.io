@@ -4,14 +4,15 @@
         <b-col cols="12" class="text-center">
           <div class="loading-message">Waiting for all players to join...</div>
           <p class="game-id-display">Game ID: {{ gameId }}</p>
-          <b-spinner label="Loading..."></b-spinner>
+          <b-spinner label="Loading..." v-if="loading"></b-spinner>
+          <div v-if="error">Error: {{ error.message }}</div>
         </b-col>
       </b-row>
     </b-container>
   </template>
   
   <script setup>
-  import { onMounted, onUnmounted, ref } from 'vue';
+  import { ref, onMounted, onUnmounted } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useQuery, useMutation } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
@@ -20,12 +21,13 @@
   const route = useRoute();
   const gameId = route.params.gameId;
   
-  const gameStateQuery = gql`
-    query GameState($gameId: ID!) {
-      gameState(gameId: $gameId) {
-        currentPlayerIndex
-        players {
-          name
+  const waitingRoomQuery = gql`
+    query WaitingRoom($gameId: ID!) {
+      waitingRoom(gameId: $gameId) {
+        gameId
+        config {
+          playerNames
+          playerCount
         }
       }
     }
@@ -46,32 +48,36 @@
     }
   `;
   
-  const { loading, error, data } = useQuery(gameStateQuery, {
+  const { loading, error, data: waitingRoomData } = useQuery(waitingRoomQuery, {
     variables: { gameId },
+    pollInterval: 5000, // Automatic polling
   });
   
   const { mutate: startGame } = useMutation(startGameMutation, {
     variables: { gameId }
   });
   
-  // Polling mechanism to check if all players are connected
   const checkStartCondition = () => {
-    if (!loading.value && data?.value && data.value.gameState && data.value.gameState.players.length === data.value.gameState.playerCount) {
-      startGame().then(({ data }) => {
-        router.push(`/game/${gameId}`);
-      }).catch((err) => {
-        console.error('Error starting the game:', err);
-      });
+    console.log('Checking start condition...');
+    if (waitingRoomData.value && waitingRoomData.value.waitingRoom) {
+      const { playerNames, playerCount } = waitingRoomData.value.waitingRoom.config;
+      if (playerNames.length === playerCount) {
+        startGame().then(({ data }) => {
+          console.log('Game starting...');
+          router.push(`/game/${gameId}`);
+        }).catch((err) => {
+          console.error('Error starting the game:', err);
+        });
+      }
     }
   };
   
-  const pollingInterval = ref(null);
   onMounted(() => {
-    // Set the polling interval to 5000 milliseconds (5 seconds)
-    pollingInterval.value = setInterval(checkStartCondition, 5000);
+    checkStartCondition();  // Initial check before starting interval
   });
   
   onUnmounted(() => {
-    if (pollingInterval.value) clearInterval(pollingInterval.value);
+    console.log('Component unmounted');
   });
   </script>
+  
