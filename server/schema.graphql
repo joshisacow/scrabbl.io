@@ -40,3 +40,7 @@ type Mutation {
     startGame(gameId: ID!): GameState
     doAction(gameId: ID!, action: Action): GameState
 }
+
+type Query {
+  gameState(gameId: ID!): GameState
+}

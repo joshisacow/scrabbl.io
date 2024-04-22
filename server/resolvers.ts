@@ -24,6 +24,11 @@ const saveGameState = async (gameId: string, state: GameState) => {
 }
 
 const resolvers = {
+    Query: {
+        gameState: async (_: any, { gameId }: { gameId: string }) => {
+          return await fetchGameState(gameId);
+        },
+      },    
     Mutation: {
         createGame: async (_: any, { config }: { config: Config }) => {
             console.log("createGame", config)

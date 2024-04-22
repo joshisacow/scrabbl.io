@@ -2,7 +2,7 @@
   <div>
     <b-navbar toggleable="lg" type="dark" :variant="user?.roles?.includes('operator') ? 'info' : 'primary'">
       <b-navbar-brand href="#">
-        <span v-if="user?.name">Welcome, {{ user.name }}</span>
+        <span v-if="user?.preferred_username">Welcome, {{ user.preferred_username }}</span>
         <span v-else>Scrabbl.io</span>
       </b-navbar-brand>
       <b-navbar-nav>

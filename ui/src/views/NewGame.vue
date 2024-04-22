@@ -2,7 +2,8 @@
   <b-container class="new-game">
     <b-row>
       <b-col cols="12" md="8" class="mx-auto">
-        <h1>Create New Game</h1>
+        <h1>Create or Join a Game</h1>
+        <!-- Form for creating a new game -->
         <b-form @submit.prevent="startNewGame">
           <b-form-group label="Number of Players">
             <b-form-select v-model="newGameOptions.playerCount" :options="playerCountOptions"></b-form-select>
@@ -20,7 +21,14 @@
               {{ newGameOptions.swap ? 'Yes' : 'No' }}
             </b-form-checkbox>
           </b-form-group>
-          <b-button type="submit" variant="primary">Start Game</b-button>
+          <b-button type="submit" variant="primary">Create Game</b-button>
+        </b-form>
+        <!-- Form for joining an existing game -->
+        <b-form @submit.prevent="joinGame">
+          <b-form-group label="Game ID">
+            <b-form-input v-model="gameId" placeholder="Enter Game ID"></b-form-input>
+          </b-form-group>
+          <b-button type="submit" variant="success">Join Game</b-button>
         </b-form>
       </b-col>
     </b-row>
@@ -28,13 +36,19 @@
 </template>
 
 
+
 <script setup>
 import { ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { useRouter } from 'vue-router'; // Import the useRouter function
+import { inject } from 'vue';
+
+const user = inject('user');
+
 const router = useRouter(); // Instantiate the router
 
+const gameId = ref('');
 
 const newGameOptions = ref({
   playerCount: 2,
@@ -112,6 +126,7 @@ function generatePlayerNames(count) {
 //       console.error('Error starting new game:', error);
 //     }
 // };
+
 const startNewGame = async () => {
   const config = {
     playerCount: parseInt(newGameOptions.value.playerCount),
@@ -134,6 +149,32 @@ const startNewGame = async () => {
     console.error('Error creating new game:', error);
   }
 };
+
+const JOIN_GAME = gql`
+  mutation JoinGame($gameId: ID!, $playerName: String!) {
+    joinGame(gameId: $gameId, playerName: $playerName)
+  }
+`;
+
+const { mutate: joinGameMutation } = useMutation(JOIN_GAME);
+
+const joinGame = async () => {
+  try {
+    const playerName = user.value.preferred_username; // This should be dynamically obtained or entered by the user
+    const { data } = await joinGameMutation({
+      gameId: gameId.value,
+      playerName
+    });
+    if (data.joinGame) {
+      router.push({ name: 'Game', params: { gameId: gameId.value } });
+    } else {
+      console.error('Joining game failed or game is full.');
+    }
+  } catch (error) {
+    console.error('Error joining game:', error);
+  }
+};
+
 
 </script>
 
