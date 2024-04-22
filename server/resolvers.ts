@@ -31,6 +31,7 @@ const resolvers = {
           return new GameState(state.board, state.players, state.currentPlayerIndex, state.deck, state.swap);
         },
         waitingRoom: async (_: any, { gameId }: { gameId: String }) => {
+            console.log("waitingRoom", gameId)
           const room = await waitingRooms.findOne({ gameId: gameId });
           if (!room) throw new Error("Waiting room not found");
           return {

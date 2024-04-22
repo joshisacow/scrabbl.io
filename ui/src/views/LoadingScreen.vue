@@ -12,7 +12,7 @@
   </template>
   
   <script setup>
-  import { ref, onMounted, onUnmounted } from 'vue';
+  import { ref, onMounted, onUnmounted, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useQuery, useMutation } from '@vue/apollo-composable';
   import gql from 'graphql-tag';
@@ -20,16 +20,17 @@
   const router = useRouter();
   const route = useRoute();
   const gameId = route.params.gameId;
-  
+  console.log("gameId: ", gameId)
+
   const waitingRoomQuery = gql`
-    query WaitingRoom($gameId: ID!) {
-      waitingRoom(gameId: $gameId) {
-        gameId
-        config {
-          playerNames
-          playerCount
+    query GetWaitingRoom($gameId: ID!) {
+        waitingRoom(gameId: $gameId) {
+            gameId
+            config {
+                playerCount
+                playerNames
+            }
         }
-      }
     }
   `;
   
@@ -47,33 +48,63 @@
       }
     }
   `;
-  
-  const { loading, error, data: waitingRoomData } = useQuery(waitingRoomQuery, {
-    variables: { gameId },
-    pollInterval: 5000, // Automatic polling
-  });
+  console.log(gameId)
+
   
   const { mutate: startGame } = useMutation(startGameMutation, {
     variables: { gameId }
   });
+
+    const { result, loading, error } = useQuery(waitingRoomQuery, {
+        gameId: gameId
+    });
+
+    watch(result, (newResult) => {
+        if (newResult && newResult.waitingRoom) {
+        const { playerNames, playerCount } = newResult.waitingRoom.config;
+        if (playerNames.length === playerCount) {
+            startGame()
+            .then(({ data }) => {
+                console.log('Game starting...');
+                router.push(`/game/${gameId}`);
+            })
+            .catch((err) => {
+                console.error('Error starting the game:', err);
+            });
+        }
+        }
+    });
+
+
   
-  const checkStartCondition = () => {
-    console.log('Checking start condition...');
-    if (waitingRoomData.value && waitingRoomData.value.waitingRoom) {
-      const { playerNames, playerCount } = waitingRoomData.value.waitingRoom.config;
-      if (playerNames.length === playerCount) {
-        startGame().then(({ data }) => {
-          console.log('Game starting...');
-          router.push(`/game/${gameId}`);
-        }).catch((err) => {
-          console.error('Error starting the game:', err);
-        });
-      }
-    }
-  };
+//   const checkStartCondition = () => {
+//     console.log('Checking start condition...');
+    
+//     console.log(result.value)
+//     console.log(loading.value)
+//     console.log(error.value)
+//     // while (loading.value === true) {
+//     //   console.log('Waiting for result...');
+//     // }
+//     console.log('Result:', result.value)
+//     if (waitingRoomData.value && waitingRoomData.value.waitingRoom) {
+//       const { playerNames, playerCount } = waitingRoomData.value.waitingRoom.config;
+//       if (playerNames.length === playerCount) {
+//         startGame().then(({ data }) => {
+//           console.log('Game starting...');
+//           router.push(`/game/${gameId}`);
+//         }).catch((err) => {
+//           console.error('Error starting the game:', err);
+//         });
+//       }
+//     }
+//   };
+
+
+//   checkStartCondition();
   
   onMounted(() => {
-    checkStartCondition();  // Initial check before starting interval
+    // checkStartCondition();  // Initial check before starting interval
   });
   
   onUnmounted(() => {
