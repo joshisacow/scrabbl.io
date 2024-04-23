@@ -310,19 +310,63 @@ const submitWord = async () => {
   }
 };
 
-function resign() {
-  console.log('Player resigned');
-  // Implement the logic for when a player resigns
+// Skip Turn
+async function skipTurn() {
+  if (!gameState.value?.gameStateChanged) {
+    console.error("Game state is not available.");
+    return;
+  }
+  const action = {
+    action: 'SKIP_TURN',
+    playerIndex: gameState.value.gameStateChanged.currentPlayerIndex
+  };
+
+  try {
+    await performAction({ gameId, action });
+    console.log('Turn skipped successfully');
+  } catch (error) {
+    console.error("Error performing skip turn:", error);
+  }
 }
 
-function skipTurn() {
-  console.log('Player skipped turn');
-  // Implement the logic for when a player skips their turn
+// Resign Game
+async function resign() {
+  if (!gameState.value?.gameStateChanged) {
+    console.error("Game state is not available.");
+    return;
+  }
+  const action = {
+    action: 'RESIGN',
+    playerIndex: gameState.value.gameStateChanged.currentPlayerIndex
+  };
+
+  try {
+    await performAction({ gameId, action });
+    console.log('Player has resigned');
+    // router.push('/'); // Redirect to home or another appropriate route
+  } catch (error) {
+    console.error("Error performing resignation:", error);
+  }
 }
 
-function swapTiles() {
-  console.log('Player wants to swap tiles');
-  // Implement the logic for swapping tiles
+// Swap Tiles
+async function swapTiles() {
+  if (!gameState.value?.gameStateChanged) {
+    console.error("Game state is not available.");
+    return;
+  }
+  const action = {
+    action: 'SWAP_TILES',
+    playerIndex: gameState.value.gameStateChanged.currentPlayerIndex,
+    potentialTiles: selectedTile.value ? [selectedTile.value.letter] : []
+  };
+
+  try {
+    await performAction({ gameId, action });
+    console.log('Tiles swapped successfully');
+  } catch (error) {
+    console.error("Error performing tile swap:", error);
+  }
 }
 
 // Other functions as before
