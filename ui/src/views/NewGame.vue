@@ -95,8 +95,6 @@ const CREATE_GAME = gql`
 
 const { mutate: createGameMutation } = useMutation(CREATE_GAME);
 
-
-
 // Function to generate player names based on count
 function generatePlayerNames(count) {
   return Array.from({ length: count }, (_, i) => `Player ${i + 1}`);
