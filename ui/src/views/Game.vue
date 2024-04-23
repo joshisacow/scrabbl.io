@@ -68,7 +68,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useQuery, useMutation } from '@vue/apollo-composable';
+import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { inject } from 'vue';
 
@@ -106,6 +106,21 @@ const GET_GAME_STATE = gql`
   }
 `;
 
+const GAME_STATE_CHANGED_SUBSCRIPTION = gql`
+  subscription GameStateChanged($gameId: ID!) {
+    gameStateChanged(gameId: $gameId) {
+      board
+      players {
+        name
+        hand
+        score
+      }
+      currentPlayerIndex
+      deck
+    }
+  }
+`;
+
 const PERFORM_ACTION = gql`
   mutation PerformAction($gameId: ID!, $action: Action!) {
     doAction(gameId: $gameId, action: $action) {
@@ -119,9 +134,9 @@ const PERFORM_ACTION = gql`
 
 // Reactive state
 // Use the queries and mutations
-const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
+// const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
+const { result: gameState, loading } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
-
 // Reactive states for the components
 const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
@@ -134,11 +149,13 @@ const myState = ref({});
 
 // Watching game state to update local state
 watch(gameState, (newState, oldState) => {
-  if (newState && newState.gameState) {
-    console.log("New State:", newState.gameState);
+  console.log(gameState.value)
+  console.log(newState)
+  if (newState && newState.gameStateChanged) {
+    console.log("New State:", newState.gameStateChanged);
 
     // Convert board data from strings to BoardTile objects
-    board.value = newState.gameState.board.map(row => 
+    board.value = newState.gameStateChanged.board.map(row => 
       row.map(tileString => ({
         letter: null,  // Assuming no letter is initially on the board
         type: tileString.trim() === '' ? 'normal' : tileString.trim(),
@@ -149,7 +166,7 @@ watch(gameState, (newState, oldState) => {
     console.log("Board:", board.value);
 
     // Update player's tiles and scores
-    const currentPlayer = newState.gameState.players.find(player => 
+    const currentPlayer = newState.gameStateChanged.players.find(player => 
       player.name === user.value.preferred_username
     );
     if (currentPlayer) {
@@ -159,7 +176,7 @@ watch(gameState, (newState, oldState) => {
 
     // Example to update turn history
     // Adjust based on your actual data structure and needs
-    turnHistory.value = newState.gameState.players.map(player => ({
+    turnHistory.value = newState.gameStateChanged.players.map(player => ({
       player: player.name,
       turn: player.currentTurn,  // Example property
       word: player.lastWord,    // Example property
@@ -229,12 +246,12 @@ function resetPlayedTiles() {
 
 const submitWord = async () => {
   console.log("gameId", gameId)
-  if (!gameState.value || !gameState.value.gameState) {
+  if (!gameState.value || !gameState.value.gameStateChanged) {
     console.error("Game state is not available.");
     return;
   }
 
-  const currentPlayerIndex = gameState.value.gameState.currentPlayerIndex;
+  const currentPlayerIndex = gameState.value.gameStateChanged.currentPlayerIndex;
   const action = {
     action: 'PLAY',
     playerIndex: currentPlayerIndex,
