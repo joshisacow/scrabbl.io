@@ -61,7 +61,7 @@
 
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
@@ -69,7 +69,7 @@ import { inject } from 'vue';
 
 const user = inject('user');
 
-const router = useRouter();
+// const router = useRouter();
 const route = useRoute();
 const gameId = route.params.gameId;
 console.log("gameId: ", gameId)
@@ -132,6 +132,8 @@ const PERFORM_ACTION = gql`
 // const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
 const { result: gameState, loading } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
+const { result } = useQuery(GET_GAME_STATE, { gameId });
+
 // Reactive states for the components
 const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
@@ -144,10 +146,19 @@ const tileBag = ref({});
 const myState = ref({});
 
 
+
+watch(result, () => {
+  if (result.value && result.value.gameState && !gameState.value) {
+    console.log("result", result.value.gameState);
+    gameState.value = {
+      gameStateChanged: result.value.gameState
+    }
+  }
+})
+
 // Watching game state to update local state
 watch(gameState, (newState, oldState) => {
   console.log(gameState.value)
-  console.log(newState)
   if (newState && newState.gameStateChanged) {
     console.log("New State:", newState.gameStateChanged);
 
@@ -172,7 +183,7 @@ watch(gameState, (newState, oldState) => {
     }
 
     const counts = {};
-    newState.gameState.deck.forEach(letter => {
+    newState.gameStateChanged.deck.forEach(letter => {
     if (letter.trim() !== '') {  // Ensure not to count spaces if they are not used as tiles
       counts[letter] = (counts[letter] || 0) + 1;
     }
