@@ -62,16 +62,25 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
+import { useRoute } from 'vue-router';
+import { useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { inject } from 'vue';
 
-const user = inject('user');
+interface User {
+  value?: {
+    preferred_username?: string;
+  }
+}
 
-const router = useRouter();
+
+const user = inject<User>('user', { value: { preferred_username: '' }});
+
+
+// const router = useRouter();
 const route = useRoute();
-const gameId = route.params.gameId;
+const gameId = route.params.gameId as string;
+
 console.log("gameId: ", gameId)
 
 type BoardTile = {
@@ -86,20 +95,20 @@ type RackTile = {
 
 
 // GraphQL queries and mutations
-const GET_GAME_STATE = gql`
-  query GetGameState($gameId: ID!) {
-    gameState(gameId: $gameId) {
-      board
-      players {
-        name
-        hand
-        score
-      }
-      currentPlayerIndex
-      deck
-    }
-  }
-`;
+// const GET_GAME_STATE = gql`
+//   query GetGameState($gameId: ID!) {
+//     gameState(gameId: $gameId) {
+//       board
+//       players {
+//         name
+//         hand
+//         score
+//       }
+//       currentPlayerIndex
+//       deck
+//     }
+//   }
+// `;
 
 const GAME_STATE_CHANGED_SUBSCRIPTION = gql`
   subscription GameStateChanged($gameId: ID!) {
@@ -130,63 +139,64 @@ const PERFORM_ACTION = gql`
 // Reactive state
 // Use the queries and mutations
 // const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
-const { result: gameState, loading } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
+const { result: gameState } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
-// Reactive states for the components
 const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
-const playerScores = ref({});
-const turnHistory = ref([]);
-const selectedTile = ref<RackTile | null>();
-const selectedIndex = ref<number | null>();
-const playedTiles = ref([]);
-const tileBag = ref({});
-const myState = ref({});
+const playerScores = ref<Record<string, number>>({});
+const selectedTile = ref<RackTile | null>(null);
+const selectedIndex = ref<number | null>(null);
+const playedTiles = ref<Array<{ rowIndex: number; colIndex: number; letter: string }>>([]);
+const tileBag = ref<Record<string, number>>({});
+
 
 
 // Watching game state to update local state
-watch(gameState, (newState, oldState) => {
+watch(gameState, (newState) => {
   console.log(gameState.value)
   console.log(newState)
   if (newState && newState.gameStateChanged) {
-    console.log("New State:", newState.gameStateChanged);
-
-    // Convert board data from strings to BoardTile objects
-    board.value = newState.gameStateChanged.board.map(row => 
-      row.map(tileString => ({
-        letter: null,  // Assuming no letter is initially on the board
+    board.value = newState.gameStateChanged.board.map((row: string[]) =>
+      row.map((tileString: string) => ({
+        letter: null,
         type: tileString.trim() === '' ? 'normal' : tileString.trim(),
         isPlaced: false
       }))
     );
 
+
+
     console.log("Board:", board.value);
 
     // Update player's tiles and scores
-    const currentPlayer = newState.gameStateChanged.players.find(player => 
-      player.name === user.value.preferred_username
+    const currentPlayer = newState.gameStateChanged.players.find((player: { name: string; hand: string[]; score: number }) =>
+      player.name === user.value?.preferred_username
     );
+
     if (currentPlayer) {
-      myTiles.value = currentPlayer.hand.map(letter => ({ letter }));
+      myTiles.value = currentPlayer.hand.map((letter: string) => ({ letter }));
       playerScores.value[currentPlayer.name] = currentPlayer.score;
     }
 
-    const counts = {};
-    newState.gameState.deck.forEach(letter => {
-    if (letter.trim() !== '') {  // Ensure not to count spaces if they are not used as tiles
-      counts[letter] = (counts[letter] || 0) + 1;
-    }
-  });
-  tileBag.value = counts;
+
+
+    const counts: Record<string, number> = {};
+    newState.gameState.deck.forEach((letter: string) => {
+      if (letter.trim() !== '') {
+        counts[letter] = (counts[letter] || 0) + 1;
+      }
+    });
+    tileBag.value = counts;
+
 
     // Example to update turn history
     // Adjust based on your actual data structure and needs
-    turnHistory.value = newState.gameStateChanged.players.map(player => ({
-      player: player.name,
-      turn: player.currentTurn,  // Example property
-      word: player.lastWord,    // Example property
-      score: player.score
-    }));
+    // turnHistory.value = newState.gameStateChanged.players.map(player => ({
+    //   player: player.name,
+    //   turn: player.currentTurn,  // Example property
+    //   word: player.lastWord,    // Example property
+    //   score: player.score
+    // }));
 
     console.log("My tiles:", myTiles.value);
     console.log("Player scores:", playerScores.value);
@@ -210,7 +220,7 @@ function placeOrPickupTile(rowIndex: number, colIndex: number) {
   if (selectedTile.value && !boardTile.letter) {
     boardTile.letter = selectedTile.value.letter;
     boardTile.isPlaced = true; // Set to true when placed
-    myTiles.value.splice(selectedIndex.value, 1);
+    myTiles.value.splice(selectedIndex.value ?? 0, 1);
     playedTiles.value.push({ rowIndex, colIndex, letter: boardTile.letter });
     selectedTile.value = null;
     selectedIndex.value = null;
@@ -238,7 +248,7 @@ function resetPlayedTiles() {
   playedTiles.value.forEach(pt => {
     const tile = board.value[pt.rowIndex][pt.colIndex];
     // Put the tile back in the rack
-    myTiles.value.push({ letter: tile.letter });
+    myTiles.value.push({ letter: tile.letter as string }); 
     // Clear the tile from the board
     tile.letter = null;
     tile.isPlaced = false; // Ensure isPlaced is reset
