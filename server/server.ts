@@ -20,7 +20,8 @@ import cors from "cors"
 
 
 // set up Mongo
-const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017'
+const mongoUrl = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017'
+console.log(mongoUrl)
 const client = new MongoClient(mongoUrl)
 let db: Db
 let gameStates: Collection
@@ -81,7 +82,7 @@ const sessionMiddleware = session({
   cookie: { secure: false },
 
   store: MongoStore.create({
-    mongoUrl: 'mongodb://localhost:27017',
+    mongoUrl: mongoUrl,
     ttl: 14 * 24 * 60 * 60 // 14 days
   })
 })
@@ -113,6 +114,11 @@ startApolloServer().then(() => {
     expressMiddleware(server),
   );
   
+  // sample empty route
+  app.use('/', (req, res) => {
+    res.send('Hello World!')
+  })
+
   app.post(
     "/api/logout", 
     (req, res, next) => {

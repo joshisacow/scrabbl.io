@@ -1,29 +1,29 @@
 <template>
-    <b-container class="new-game">
-      <b-row>
-        <b-col cols="12" md="8" class="mx-auto">
-          <h1>Create New Game</h1>
-          <b-form @submit.prevent="startNewGame">
-            <b-form-group label="Language">
-              <b-form-select v-model="newGameOptions.language" :options="languageOptions"></b-form-select>
-            </b-form-group>
-            <b-form-group label="Number of Players">
-              <b-form-select v-model="newGameOptions.playerCount" :options="playerCountOptions"></b-form-select>
-            </b-form-group>
-            <b-form-group label="Board Type">
-              <b-form-select v-model="newGameOptions.boardType" :options="boardTypeOptions"></b-form-select>
-            </b-form-group>
-            <b-form-group label="Time Limit">
-              <b-form-select v-model="newGameOptions.timeLimit" :options="timeLimitOptions"></b-form-select>
-            </b-form-group>
-            <b-button type="submit" variant="primary">Start Game</b-button>
-          </b-form>
-        </b-col>
-      </b-row>
-    </b-container>
-  </template>
+  <b-container class="new-game">
+    <b-row>
+      <b-col cols="12" md="8" class="mx-auto">
+        <h1>Create New Game</h1>
+        <b-form @submit.prevent="startNewGame">
+          <b-form-group label="Language">
+            <b-form-select v-model="newGameOptions.language" :options="languageOptions"></b-form-select>
+          </b-form-group>
+          <b-form-group label="Number of Players">
+            <b-form-select v-model="newGameOptions.playerCount" :options="playerCountOptions"></b-form-select>
+          </b-form-group>
+          <b-form-group label="Board Type">
+            <b-form-select v-model="newGameOptions.boardType" :options="boardTypeOptions"></b-form-select>
+          </b-form-group>
+          <b-form-group label="Time Limit">
+            <b-form-select v-model="newGameOptions.timeLimit" :options="timeLimitOptions"></b-form-select>
+          </b-form-group>
+          <b-button type="submit" variant="primary">Start Game</b-button>
+        </b-form>
+      </b-col>
+    </b-row>
+  </b-container>
+</template>
   
-  <script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';

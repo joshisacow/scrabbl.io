@@ -15,7 +15,7 @@
     </b-container>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // You can include scripts for handling transitions or loading states here
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
