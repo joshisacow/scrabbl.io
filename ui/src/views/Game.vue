@@ -78,7 +78,7 @@ const currentPlayerName = computed(() => {
 });
 
 
-interface User {
+export interface User {
   value?: {
     preferred_username?: string;
   }
@@ -157,13 +157,10 @@ const { result } = useQuery(GET_GAME_STATE, { gameId });
 const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
 const playerScores = ref({});
-const turnHistory = ref([]);
 const selectedTile = ref<RackTile | null>();
 const selectedIndex = ref<number | null>();
-const playedTiles = ref([]);
+const playedTiles = ref<any>([]);
 const tileBag = ref({});
-const myState = ref({});
-
 
 
 watch(result, () => {
@@ -196,7 +193,7 @@ watch(gameState, (newState) => {
       player.name === user.value?.preferred_username
     );
     const players = newState.gameStateChanged.players
-    playerScores.value = players.reduce((acc, player) => {
+    playerScores.value = players.reduce((acc: any, player: any) => {
       acc[player.name] = player.score;
       return acc;
     }, {});
@@ -255,7 +252,7 @@ function placeOrPickupTile(rowIndex: number, colIndex: number) {
     selectedIndex.value = null;
   } else if (!selectedTile.value && boardTile.letter && boardTile.isPlaced) {
     // This checks if the tile was previously placed in the same turn before picking it up
-    const playedTileIndex = playedTiles.value.findIndex(pt => pt.rowIndex === rowIndex && pt.colIndex === colIndex);
+    const playedTileIndex = playedTiles.value.findIndex((pt: { rowIndex: number, colIndex: number }) => pt.rowIndex === rowIndex && pt.colIndex === colIndex);
     if (playedTileIndex !== -1) {
       playedTiles.value.splice(playedTileIndex, 1);
     }
@@ -274,7 +271,7 @@ function shuffleTiles() {
 }
 
 function resetPlayedTiles() {
-  playedTiles.value.forEach(pt => {
+  playedTiles.value.forEach((pt: { rowIndex: number, colIndex: number }) => {
     const tile = board.value[pt.rowIndex][pt.colIndex];
     // Put the tile back in the rack
     myTiles.value.push({ letter: tile.letter as string }); 
@@ -299,8 +296,8 @@ const submitWord = async () => {
   const action = {
     action: 'PLAY',
     playerIndex: currentPlayerIndex,
-    potentialTiles: playedTiles.value.map(t => t.letter),
-    locations: playedTiles.value.map(t => ([t.rowIndex, t.colIndex]))
+    potentialTiles: playedTiles.value.map((t: any) => t.letter),
+    locations: playedTiles.value.map((t: any) => ([t.rowIndex, t.colIndex]))
   };
 
   try {

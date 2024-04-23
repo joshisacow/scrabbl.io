@@ -17,8 +17,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { inject } from 'vue';
+import { User } from './Game.vue'
 
-const user = inject('user');
+const user: User | undefined = inject('user');
 
 const router = useRouter();
 const route = useRoute();
@@ -65,11 +66,11 @@ const { result, loading, error } = useQuery(waitingRoomQuery, {
 watch(result, (newResult) => {
   if (newResult && newResult.waitingRoom) {
     const { playerNames, playerCount } = newResult.waitingRoom.config;
-    if (playerNames.length === playerCount) {
+    if (playerNames.length === playerCount && user && user.value) {
       startGame()
         .then(() => {
           console.log('Game starting...');
-          router.push(`/game/${gameId}/${user.value.preferred_username}`);
+          router.push(`/game/${gameId}/${user.value!.preferred_username}`);
         })
         .catch((err) => {
           console.error('Error starting the game:', err);
