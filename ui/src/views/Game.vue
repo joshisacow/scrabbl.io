@@ -1,114 +1,262 @@
 <template>
-  
+  <b-container fluid class="game-wrapper">
+    <!-- Top Row for Game Board, Info, and Actions -->
+    <b-row>
+      <!-- Tile Bag and Turn History (Left Column) -->
+      <b-col cols="12" md="3">
+        <div class="tile-bag info-section mb-3">
+          <div v-for="(amount, letter) in tileBag" :key="letter">
+            {{ letter }}: {{ amount }}
+          </div>
+        </div>
+        <div class="turn-history info-section">
+          <div v-for="turn in turnHistory" :key="turn.player + '-' + turn.turn">
+            Player {{ turn.player }}, Turn {{ turn.turn }}: {{ turn.word }} ({{ turn.score }})
+          </div>
+        </div>
+      </b-col>
+
+      <!-- Game Board (Center Column) -->
+      <b-col cols="12" md="6" class="game-board-container mb-3">
+        <div class="game-board">
+          <div v-for="(row, rowIndex) in board" :key="'row-' + rowIndex" class="board-row">
+            <div v-for="(tile, colIndex) in row" :key="'tile-' + rowIndex + '-' + colIndex" class="board-tile"
+              :class="{ 'placed-tile': tile.isPlaced, [tile.type]: true }"
+              @click="placeOrPickupTile(rowIndex, colIndex)">
+              <span v-if="tile.letter" class="tile-letter">{{ tile.letter }}</span>
+              <span v-if="!tile.letter && tile.type !== 'normal' && tile.type !== 'STAR'" class="tile-score">{{ tile.type }}</span>
+              <span v-if="tile.type === 'STAR'"><font-awesome-icon :icon="['fas', 'star']" /></span>
+            </div>
+          </div>
+        </div>
+      </b-col>
+
+      <!-- Player Scores and Action Buttons (Right Column) -->
+      <b-col cols="12" md="3">
+        <div class="player-scores info-section mb-3">
+          <div v-for="(score, player) in playerScores" :key="player">
+            Player {{ player }}: Score - {{ score }}
+          </div>
+        </div>
+        <div class="action-buttons">
+          <b-button variant="danger" @click="resign" class="mb-2">Resign</b-button>
+          <b-button variant="secondary" @click="skipTurn" class="mb-2">Skip</b-button>
+          <b-button variant="secondary" @click="swapTiles" class="mb-2">Swap</b-button>
+          <b-button variant="primary" @click="submitWord" class="mb-2">Submit</b-button>
+        </div>
+      </b-col>
+    </b-row>
+    
+    <!-- Bottom Row for Tile Rack -->
+    <b-row>
+      <b-col cols="12" class="tile-rack-container">
+        <div class="tile-rack">
+          <b-button variant="info" @click="shuffleTiles" class="mr-2">Shuffle</b-button>
+          <div v-for="(tile, index) in myTiles" :key="index" class="rack-tile"
+            :class="{ selected: selectedTile === tile }" 
+            @click="selectTileFromRack(tile, index)">
+            {{ tile.letter }}
+          </div>
+          <b-button variant="warning" @click="resetPlayedTiles">Reset Turn</b-button>
+        </div>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
 
 <script setup lang="ts">
-// import { ref, watch } from 'vue';
-// import { useRoute } from 'vue-router';
-// import { useQuery, useMutation } from '@vue/apollo-composable';
-// import gql from 'graphql-tag';
-// import { inject } from 'vue';
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useQuery, useMutation } from '@vue/apollo-composable';
+import gql from 'graphql-tag';
+import { inject } from 'vue';
 
-// // const user = inject('user');
+const user = inject('user');
 
-// const route = useRoute();
-// const gameId = route.params.gameId;
+const route = useRoute();
+const gameId = route.params.gameId;
 
-// // GraphQL queries and mutations
-// const GET_GAME_STATE = gql`
-//   query GetGameState($gameId: ID!) {
-//     gameState(gameId: $gameId) {
-//       board
-//       players {
-//         name
-//         hand
-//         score
-//       }
-//       currentPlayerIndex
-//       deck
-//     }
-//   }
-// `;
+type BoardTile = {
+  letter: string | null,
+  type: string,
+  isPlaced: boolean // Add a new property to track if the tile has been placed
+}
 
-// const PERFORM_ACTION = gql`
-//   mutation PerformAction($gameId: ID!, $action: Action!) {
-//     doAction(gameId: $gameId, action: $action) {
-//       board
-//       players {
-//         score
-//       }
-//     }
-//   }
-// `;
+type RackTile = {
+  letter: string
+}
 
-// // Reactive state
-// const gameState = useQuery(GET_GAME_STATE, { gameId });
-// const { mutate: performAction } = useMutation(PERFORM_ACTION);
-// const board = ref([]);
-// const myTiles = ref([]);
-// const playerScores = ref({});
-// const turnHistory = ref([]);
-// const selectedTile = ref(null);
-// const playedTiles = ref([]);
 
-// // // Update local state based on the game state
-// // watch(gameState.result, (newState) => {
-// //   if (newState && newState.gameState) {
-// //     board.value = newState.gameState.board.map(row => row.map(tile => ({
-// //       letter: tile,
-// //       isPlaced: false,
-// //       type: 'normal' // Adjust according to actual data
-// //     })));
-// //     console.log("Board value:", board.value)
-// //     myTiles.value = newState.gameState.players.find(p => p.name === user.value.preferred_username).hand; // Adapt as needed
-// //     console.log("My tiles:", myTiles.value)
-// //     playerScores.value = newState.gameState.players.reduce((acc, player) => {
-// //       acc[player.name] = player.score;
-// //       return acc;
-// //     }, {});
-// //     console.log("Player scores:", playerScores.value)
-// //   }
-// // }, { deep: true });
+// GraphQL queries and mutations
+const GET_GAME_STATE = gql`
+  query GetGameState($gameId: ID!) {
+    gameState(gameId: $gameId) {
+      board
+      players {
+        name
+        hand
+        score
+      }
+      currentPlayerIndex
+      deck
+    }
+  }
+`;
 
-// // // Functions for tile interaction
-// // function selectTileFromRack(tile, index) {
-// //   if (selectedTile.value && selectedTile.value === tile) {
-// //     selectedTile.value = null;
-// //   } else {
-// //     selectedTile.value = tile;
-// //   }
-// // }
+const PERFORM_ACTION = gql`
+  mutation PerformAction($gameId: ID!, $action: Action!) {
+    doAction(gameId: $gameId, action: $action) {
+      board
+      players {
+        score
+      }
+    }
+  }
+`;
 
-// // function placeOrPickupTile(rowIndex, colIndex) {
-// //   const tile = board.value[rowIndex][colIndex];
-// //   if (selectedTile.value && !tile.letter) {
-// //     // Place tile from rack to board
-// //     tile.letter = selectedTile.value.letter;
-// //     tile.isPlaced = true;
-// //     myTiles.value.splice(myTiles.value.indexOf(selectedTile.value), 1);
-// //     playedTiles.value.push({ tile, rowIndex, colIndex });
-// //     selectedTile.value = null;
-// //   } else if (tile.isPlaced) {
-// //     // Pick up tile from board to rack
-// //     myTiles.value.push({ letter: tile.letter });
-// //     tile.letter = null;
-// //     tile.isPlaced = false;
-// //     playedTiles.value = playedTiles.value.filter(pt => pt.rowIndex !== rowIndex || pt.colIndex !== colIndex);
-// //   }
-// // }
+// Reactive state
+// Use the queries and mutations
+const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
+const { mutate: performAction } = useMutation(PERFORM_ACTION);
 
-// // function resetPlayedTiles() {
-// //   playedTiles.value.forEach(pt => {
-// //     const tile = board.value[pt.rowIndex][pt.colIndex];
-// //     myTiles.value.push({ letter: tile.letter });
-// //     tile.letter = null;
-// //     tile.isPlaced = false;
-// //   });
-// //   playedTiles.value = [];
-// // }
+// Reactive states for the components
+const board = ref<BoardTile[][]>([]);
+const myTiles = ref<RackTile[]>([]);
+const playerScores = ref({});
+const turnHistory = ref([]);
+const selectedTile = ref<RackTile | null>(null);
+const selectedIndex = ref<number | null>(null);
+const playedTiles = ref([]);
+const myState = ref({});
 
-// // Other functions as before
+
+
+// Watching game state to update local state
+watch(gameState, (newState, oldState) => {
+  if (newState && newState.gameState) {
+    console.log("New State:", newState.gameState);
+
+    // Convert board data from strings to BoardTile objects
+    board.value = newState.gameState.board.map(row => 
+      row.map(tileString => ({
+        letter: null,  // Assuming no letter is initially on the board
+        type: tileString.trim() === '' ? 'normal' : tileString.trim(),
+        isPlaced: false
+      }))
+    );
+
+    console.log("Board:", board.value);
+
+    // Update player's tiles and scores
+    const currentPlayer = newState.gameState.players.find(player => 
+      player.name === user.value.preferred_username
+    );
+    if (currentPlayer) {
+      myTiles.value = currentPlayer.hand.map(letter => ({ letter }));
+      playerScores.value[currentPlayer.name] = currentPlayer.score;
+    }
+
+    // Example to update turn history
+    // Adjust based on your actual data structure and needs
+    turnHistory.value = newState.gameState.players.map(player => ({
+      player: player.name,
+      turn: player.currentTurn,  // Example property
+      word: player.lastWord,    // Example property
+      score: player.score
+    }));
+
+    console.log("My tiles:", myTiles.value);
+    console.log("Player scores:", playerScores.value);
+  }
+});
+
+
+// Functions for tile interaction
+function selectTileFromRack(tile: RackTile, index: number) {
+  if (selectedTile.value === tile) {
+    selectedTile.value = null; // Deselect if the same tile is clicked again
+    selectedIndex.value = null;
+  } else {
+    selectedTile.value = tile;
+    selectedIndex.value = index;
+  }
+}
+
+function placeOrPickupTile(rowIndex: number, colIndex: number) {
+  const boardTile = board.value[rowIndex][colIndex];
+  if (selectedTile.value && !boardTile.letter) {
+    boardTile.letter = selectedTile.value.letter;
+    boardTile.isPlaced = true; // Set to true when placed
+    myTiles.value.splice(selectedIndex.value, 1);
+    playedTiles.value.push({ rowIndex, colIndex, letter: boardTile.letter });
+    selectedTile.value = null;
+    selectedIndex.value = null;
+  } else if (!selectedTile.value && boardTile.letter && boardTile.isPlaced) {
+    // This checks if the tile was previously placed in the same turn before picking it up
+    const playedTileIndex = playedTiles.value.findIndex(pt => pt.rowIndex === rowIndex && pt.colIndex === colIndex);
+    if (playedTileIndex !== -1) {
+      playedTiles.value.splice(playedTileIndex, 1);
+    }
+    myTiles.value.push({ letter: boardTile.letter });
+    boardTile.letter = null;
+    boardTile.isPlaced = false;
+  }
+}
+
+
+function shuffleTiles() {
+  for (let i = myTiles.value.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [myTiles.value[i], myTiles.value[j]] = [myTiles.value[j], myTiles.value[i]];
+  }
+}
+
+function resetPlayedTiles() {
+  playedTiles.value.forEach(pt => {
+    const tile = board.value[pt.rowIndex][pt.colIndex];
+    // Put the tile back in the rack
+    myTiles.value.push({ letter: tile.letter });
+    // Clear the tile from the board
+    tile.letter = null;
+    tile.isPlaced = false; // Ensure isPlaced is reset
+  });
+  playedTiles.value = []; // Clear the played tiles
+}
+
+
+
+
+const submitWord = async () => {
+  if (!gameState.value || !gameState.value.gameState) {
+    console.error("Game state is not available.");
+    return;
+  }
+
+  const currentPlayerIndex = gameState.value.gameState.currentPlayerIndex;
+  const action = {
+    action: 'PLAY',
+    playerIndex: currentPlayerIndex,
+    potentialTiles: playedTiles.value.map(t => ({
+      letter: t.letter,
+      position: [t.rowIndex, t.colIndex]
+    })),
+  };
+
+  try {
+    await performAction({ variables: { gameId, action } });  // Ensure variables are correctly referenced
+    console.log('Word submitted successfully');
+    // After successful submission, clear played tiles
+    playedTiles.value = [];
+  } catch (error) {
+    console.error("Error performing action:", error);
+  }
+};
+
+
+
+
+// Other functions as before
 </script>
 
 
