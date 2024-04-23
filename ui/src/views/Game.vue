@@ -67,15 +67,17 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { inject } from 'vue';
 
 const user = inject('user');
 
+const router = useRouter();
 const route = useRoute();
 const gameId = route.params.gameId;
+console.log("gameId: ", gameId)
 
 type BoardTile = {
   letter: string | null,
@@ -129,8 +131,6 @@ const selectedTile = ref<RackTile | null>(null);
 const selectedIndex = ref<number | null>(null);
 const playedTiles = ref([]);
 const myState = ref({});
-
-
 
 // Watching game state to update local state
 watch(gameState, (newState, oldState) => {
@@ -228,6 +228,7 @@ function resetPlayedTiles() {
 
 
 const submitWord = async () => {
+  console.log("gameId", gameId)
   if (!gameState.value || !gameState.value.gameState) {
     console.error("Game state is not available.");
     return;
@@ -244,7 +245,7 @@ const submitWord = async () => {
   };
 
   try {
-    await performAction({ variables: { gameId, action } });  // Ensure variables are correctly referenced
+    await performAction({ gameId, action });  // Ensure variables are correctly referenced
     console.log('Word submitted successfully');
     // After successful submission, clear played tiles
     playedTiles.value = [];
@@ -252,9 +253,6 @@ const submitWord = async () => {
     console.error("Error performing action:", error);
   }
 };
-
-
-
 
 // Other functions as before
 </script>
