@@ -201,7 +201,7 @@ client.connect().then(() => {
     //   (req, res) => res.redirect("/")
     // )
     app.get('/api/login', passport.authenticate(passportStrategies, {
-      successReturnToOrRedirect: "/"
+      successReturnToOrRedirect: "/new-game"
     }))
     
     

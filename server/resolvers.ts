@@ -27,6 +27,31 @@ const saveGameState = async (gameId: string, state: GameState) => {
 }
 
 const resolvers = {
+    Query: {
+        gameState: async (_: any, { gameId }: { gameId: String }) => {
+          const state = await gameStates.findOne({ gameId: gameId });
+          if (!state) throw new Error("Game not found");
+          return new GameState(state.board, state.players, state.currentPlayerIndex, state.deck, state.swap);
+        },
+        waitingRoom: async (_: any, { gameId }: { gameId: String }) => {
+            console.log("waitingRoom", gameId)
+          const room = await waitingRooms.findOne({ gameId: gameId });
+          if (!room) throw new Error("Waiting room not found");
+          return {
+            gameId: room.gameId,
+            config: {
+              playerCount: room.config.playerCount,
+              board: room.config.board,
+              playerNames: room.config.playerNames,
+              blankTiles: room.config.blankTiles,
+              swap: room.config.swap
+            },
+            players: room.config.playerNames  // Assuming this is how you store player names
+          };
+        }
+    },
+
+
     Mutation: {
         createGame: async (_: any, { config }: { config: Config }) => {
             console.log("createGame", config)
@@ -37,6 +62,7 @@ const resolvers = {
                 randomNumber = (Math.floor(Math.random() * (max - min + 1)) + min).toString();
             }
             await waitingRooms.insertOne({ gameId: randomNumber, config: config })
+            console.log("Game created", randomNumber)
             return randomNumber
         },
         joinGame: async (_: any, { gameId, playerName }: { gameId: string, playerName: string }) => {

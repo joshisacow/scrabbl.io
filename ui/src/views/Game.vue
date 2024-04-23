@@ -1,6 +1,5 @@
 <template>
   <b-container fluid class="game-wrapper">
-    
     <!-- Top Row for Game Board, Info, and Actions -->
     <b-row>
       <!-- Tile Bag and Turn History (Left Column) -->
@@ -23,8 +22,7 @@
           <div v-for="(row, rowIndex) in board" :key="'row-' + rowIndex" class="board-row">
             <div v-for="(tile, colIndex) in row" :key="'tile-' + rowIndex + '-' + colIndex" class="board-tile"
               :class="{ 'placed-tile': tile.isPlaced, [tile.type]: true }"
-              @click="placeOrPickupTile(rowIndex, colIndex)"
-            >
+              @click="placeOrPickupTile(rowIndex, colIndex)">
               <span v-if="tile.letter" class="tile-letter">{{ tile.letter }}</span>
               <span v-if="!tile.letter && tile.type !== 'normal' && tile.type !== 'STAR'" class="tile-score">{{ tile.type }}</span>
               <span v-if="tile.type === 'STAR'"><font-awesome-icon :icon="['fas', 'star']" /></span>
@@ -63,20 +61,36 @@
         </div>
       </b-col>
     </b-row>
-
   </b-container>
 </template>
 
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation } from '@vue/apollo-composable';
-import gql from 'graphql-tag'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-// import { byPrefixAndName } from '@awesome.me/kit-KIT_CODE/icons'
+import gql from 'graphql-tag';
+import { inject } from 'vue';
+
+const user = inject('user');
+
+const router = useRouter();
+const route = useRoute();
+const gameId = route.params.gameId;
+console.log("gameId: ", gameId)
+
+type BoardTile = {
+  letter: string | null,
+  type: string,
+  isPlaced: boolean // Add a new property to track if the tile has been placed
+}
+
+type RackTile = {
+  letter: string
+}
 
 
-
+// GraphQL queries and mutations
 const GET_GAME_STATE = gql`
   query GetGameState($gameId: ID!) {
     gameState(gameId: $gameId) {
@@ -103,93 +117,62 @@ const PERFORM_ACTION = gql`
   }
 `;
 
-// Assume you have the gameId from somewhere
-const gameId = 'your-game-id';
-
+// Reactive state
 // Use the queries and mutations
 const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
 
-// Types for board tiles and tiles in hand
-type BoardTile = {
-  letter: string | null,
-  type: string,
-  isPlaced: boolean // Add a new property to track if the tile has been placed
-}
-
-type RackTile = {
-  letter: string
-}
-
-// Initialize the tiles in your hand
-const myTiles = ref<RackTile[]>([
-  { letter: 'A' },
-  { letter: 'B' },
-  { letter: 'C' },
-  { letter: 'D' },
-  { letter: 'E' },
-  { letter: 'F' },
-  { letter: 'G' },
-  { letter: 'H' },
-]);
-
-
-const boardMap = [
-  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
-  ['    ', 'DWS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'DWS', '    '],
-  ['    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    '],
-  ['DLS', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', 'DLS'],
-  ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
-  ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
-  ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
-  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'STAR', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
-  ['    ', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DLS', '    ', '    '],
-  ['    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    '],
-  ['    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    ', '    ', 'DWS', '    ', '    ', '    ', '    '],
-  ['DLS', '    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    ', 'DLS'],
-  ['    ', '    ', 'DWS', '    ', '    ', '    ', 'DLS', '    ', 'DLS', '    ', '    ', '    ', 'DWS', '    ', '    '],
-  ['    ', 'DWS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'TLS', '    ', '    ', '    ', 'DWS', '    '],
-  ['TWS', '    ', '    ', 'DLS', '    ', '    ', '    ', 'TWS', '    ', '    ', '    ', 'DLS', '    ', '    ', 'TWS'],
-];
-
-
-// We use the map created above to initialize the board
-const board = ref<BoardTile[][]>(boardMap.map(row => row.map(type => ({
-  letter: null,
-  type: type.trim() || 'normal',
-  isPlaced: false // Initialize with false
-}))));
-
-// Example structure for the tile bag
-const tileBag = ref({
-  'A': 9, 'B': 2, 'C': 2, 'D': 4, 'E': 12, // etc.
-  // ...
-});
-
-const turnHistory = ref([
-  { player: 1, turn: 1, word: 'example', score: 15 },
-  // ...
-]);
-
-const playerScores = ref({
-  1: 0,
-  2: 0,
-  // Add more players if needed
-});
-
-// Watch the gameState and update local state accordingly
-// watch(() => gameState.value, (newState) => {
-//   if (newState) {
-//     // Update your local state with data from the GraphQL query
-//     myTiles.value = newState.players[0].hand; // Example for the first player's hand
-//   }
-// }, { deep: true });
-
+// Reactive states for the components
+const board = ref<BoardTile[][]>([]);
+const myTiles = ref<RackTile[]>([]);
+const playerScores = ref({});
+const turnHistory = ref([]);
 const selectedTile = ref<RackTile | null>(null);
 const selectedIndex = ref<number | null>(null);
 const playedTiles = ref([]);
+const myState = ref({});
+
+// Watching game state to update local state
+watch(gameState, (newState, oldState) => {
+  if (newState && newState.gameState) {
+    console.log("New State:", newState.gameState);
+
+    // Convert board data from strings to BoardTile objects
+    board.value = newState.gameState.board.map(row => 
+      row.map(tileString => ({
+        letter: null,  // Assuming no letter is initially on the board
+        type: tileString.trim() === '' ? 'normal' : tileString.trim(),
+        isPlaced: false
+      }))
+    );
+
+    console.log("Board:", board.value);
+
+    // Update player's tiles and scores
+    const currentPlayer = newState.gameState.players.find(player => 
+      player.name === user.value.preferred_username
+    );
+    if (currentPlayer) {
+      myTiles.value = currentPlayer.hand.map(letter => ({ letter }));
+      playerScores.value[currentPlayer.name] = currentPlayer.score;
+    }
+
+    // Example to update turn history
+    // Adjust based on your actual data structure and needs
+    turnHistory.value = newState.gameState.players.map(player => ({
+      player: player.name,
+      turn: player.currentTurn,  // Example property
+      word: player.lastWord,    // Example property
+      score: player.score
+    }));
+
+    console.log("My tiles:", myTiles.value);
+    console.log("Player scores:", playerScores.value);
+  }
+});
 
 
+// Functions for tile interaction
 function selectTileFromRack(tile: RackTile, index: number) {
   if (selectedTile.value === tile) {
     selectedTile.value = null; // Deselect if the same tile is clicked again
@@ -202,7 +185,6 @@ function selectTileFromRack(tile: RackTile, index: number) {
 
 function placeOrPickupTile(rowIndex: number, colIndex: number) {
   const boardTile = board.value[rowIndex][colIndex];
-
   if (selectedTile.value && !boardTile.letter) {
     boardTile.letter = selectedTile.value.letter;
     boardTile.isPlaced = true; // Set to true when placed
@@ -211,12 +193,17 @@ function placeOrPickupTile(rowIndex: number, colIndex: number) {
     selectedTile.value = null;
     selectedIndex.value = null;
   } else if (!selectedTile.value && boardTile.letter && boardTile.isPlaced) {
+    // This checks if the tile was previously placed in the same turn before picking it up
+    const playedTileIndex = playedTiles.value.findIndex(pt => pt.rowIndex === rowIndex && pt.colIndex === colIndex);
+    if (playedTileIndex !== -1) {
+      playedTiles.value.splice(playedTileIndex, 1);
+    }
     myTiles.value.push({ letter: boardTile.letter });
     boardTile.letter = null;
-    boardTile.isPlaced = false; // Reset when picked up
-    playedTiles.value.splice(playedTiles.value.findIndex(pt => pt.rowIndex === rowIndex && pt.colIndex === colIndex), 1);
+    boardTile.isPlaced = false;
   }
 }
+
 
 function shuffleTiles() {
   for (let i = myTiles.value.length - 1; i > 0; i--) {
@@ -226,51 +213,50 @@ function shuffleTiles() {
 }
 
 function resetPlayedTiles() {
-  playedTiles.value.forEach(({ rowIndex, colIndex, letter }) => {
-    const tile = board.value[rowIndex][colIndex];
+  playedTiles.value.forEach(pt => {
+    const tile = board.value[pt.rowIndex][pt.colIndex];
     // Put the tile back in the rack
-    myTiles.value.push({ letter });
+    myTiles.value.push({ letter: tile.letter });
     // Clear the tile from the board
     tile.letter = null;
     tile.isPlaced = false; // Ensure isPlaced is reset
-    // Ensure the tile type reverts to its original color coding
-    tile.type = boardMap[rowIndex][colIndex].trim() || 'normal';
   });
   playedTiles.value = []; // Clear the played tiles
 }
 
-function resign() {
-  console.log('Player resigned');
-  // Implement the logic for when a player resigns
-}
 
-function skipTurn() {
-  console.log('Player skipped turn');
-  // Implement the logic for when a player skips their turn
-}
 
-function swapTiles() {
-  console.log('Player wants to swap tiles');
-  // Implement the logic for swapping tiles
-}
 
 const submitWord = async () => {
-  // Prepare the action input based on your schema
+  console.log("gameId", gameId)
+  if (!gameState.value || !gameState.value.gameState) {
+    console.error("Game state is not available.");
+    return;
+  }
+
+  const currentPlayerIndex = gameState.value.gameState.currentPlayerIndex;
   const action = {
     action: 'PLAY',
-    playerIndex: 0, // assuming you are player 1
-    potentialTiles: myTiles.value.map(tile => tile.letter),
-    // Add more details as required by your Action input
+    playerIndex: currentPlayerIndex,
+    potentialTiles: playedTiles.value.map(t => ({
+      letter: t.letter,
+      position: [t.rowIndex, t.colIndex]
+    })),
   };
 
   try {
-    await performAction({ gameId, action });
+    await performAction({ gameId, action });  // Ensure variables are correctly referenced
+    console.log('Word submitted successfully');
+    // After successful submission, clear played tiles
+    playedTiles.value = [];
   } catch (error) {
     console.error("Error performing action:", error);
   }
 };
 
+// Other functions as before
 </script>
+
 
 <style scoped>
 .game-wrapper {

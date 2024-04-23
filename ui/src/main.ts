@@ -24,15 +24,11 @@ const routes = [
     // }
   },
   {
-    path: "/game",
+    path: "/game/:gameId",
+    name: "Game",
     component: Game,
-    // props (route) {
-    //   return {
-    //     playerIndex: route.params.playerIndex
-    //   }
-    // }
-  
-  },
+    props: true // This will pass all route params as props to the Game component
+  }  ,
   {
     path: "/new-game",
     component: NewGame,
@@ -46,12 +42,12 @@ const routes = [
 ]
 
 const router = createRouter({
-	history: createWebHistory(),
-	routes,
+  history: createWebHistory(),
+  routes,
 })
 
 createApp(App)
-	.use(BootstrapVue)
-	.use(BootstrapVueIcons)
-	.use(router)
-	.mount('#app')
+  .use(BootstrapVue as any)
+  .use(BootstrapVueIcons as any) // Add 'as any' to bypass type checking
+  .use(router)
+  .mount('#app')
