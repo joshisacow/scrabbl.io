@@ -107,10 +107,10 @@ import fs from 'fs';
 import path from 'path';
 // Load the Scrabble words into a Set
 const legalWords = new Set();
-// const filePath = path.join(__dirname, 'legalWords.txt');
-// fs.readFileSync(filePath, 'utf8')
-//     .split('\n')
-//     .forEach(word => legalWords.add(word.trim().toUpperCase()));
+const filePath = path.join(__dirname, 'legalWords.txt');
+fs.readFileSync(filePath, 'utf8')
+    .split('\n')
+    .forEach(word => legalWords.add(word.trim().toUpperCase()));
 
 export const isValidWord = (word: string) => {
     word = word.toUpperCase();

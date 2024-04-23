@@ -83,6 +83,7 @@ const resolvers = {
             console.log(room)
             const state = createNewGame(room.config)
             await saveGameState(gameId, state)
+            pubsub.publish(`gameStateChanged-${gameId}`, { gameStateChanged: state })
             return state
         },
         doAction: async (_: any, { gameId, action }: { gameId: string, action: Action }) => {
