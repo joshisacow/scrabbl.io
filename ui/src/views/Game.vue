@@ -9,11 +9,6 @@
             {{ letter }}: {{ amount }}
           </div>
         </div>
-        <div class="turn-history info-section">
-          <div v-for="turn in turnHistory" :key="turn.player + '-' + turn.turn">
-            Player {{ turn.player }}, Turn {{ turn.turn }}: {{ turn.word }} ({{ turn.score }})
-          </div>
-        </div>
       </b-col>
 
       <!-- Game Board (Center Column) -->
@@ -127,10 +122,12 @@ const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
 const playerScores = ref({});
 const turnHistory = ref([]);
-const selectedTile = ref<RackTile | null>(null);
-const selectedIndex = ref<number | null>(null);
+const selectedTile = ref<RackTile | null>();
+const selectedIndex = ref<number | null>();
 const playedTiles = ref([]);
+const tileBag = ref({});
 const myState = ref({});
+
 
 // Watching game state to update local state
 watch(gameState, (newState, oldState) => {
@@ -156,6 +153,14 @@ watch(gameState, (newState, oldState) => {
       myTiles.value = currentPlayer.hand.map(letter => ({ letter }));
       playerScores.value[currentPlayer.name] = currentPlayer.score;
     }
+
+    const counts = {};
+    newState.gameState.deck.forEach(letter => {
+    if (letter.trim() !== '') {  // Ensure not to count spaces if they are not used as tiles
+      counts[letter] = (counts[letter] || 0) + 1;
+    }
+  });
+  tileBag.value = counts;
 
     // Example to update turn history
     // Adjust based on your actual data structure and needs
@@ -232,7 +237,7 @@ const submitWord = async () => {
   if (!gameState.value || !gameState.value.gameState) {
     console.error("Game state is not available.");
     return;
-  }
+  } 
 
   const currentPlayerIndex = gameState.value.gameState.currentPlayerIndex;
   const action = {
@@ -251,6 +256,21 @@ const submitWord = async () => {
     console.error("Error performing action:", error);
   }
 };
+
+function resign() {
+  console.log('Player resigned');
+  // Implement the logic for when a player resigns
+}
+
+function skipTurn() {
+  console.log('Player skipped turn');
+  // Implement the logic for when a player skips their turn
+}
+
+function swapTiles() {
+  console.log('Player wants to swap tiles');
+  // Implement the logic for swapping tiles
+}
 
 // Other functions as before
 </script>
