@@ -24,7 +24,7 @@ const routes = [
     // }
   },
   {
-    path: "/game/:gameId",
+    path: "/game/:gameId/:userId",
     name: "Game",
     component: Game,
     props: true // This will pass all route params as props to the Game component

@@ -28,18 +28,22 @@
 
       <!-- Player Scores and Action Buttons (Right Column) -->
       <b-col cols="12" md="3">
-        <div class="player-scores info-section mb-3">
-          <div v-for="(score, player) in playerScores" :key="player">
-            Player {{ player }}: Score - {{ score }}
-          </div>
-        </div>
-        <div class="action-buttons">
-          <b-button variant="danger" @click="resign" class="mb-2">Resign</b-button>
-          <b-button variant="secondary" @click="skipTurn" class="mb-2">Skip</b-button>
-          <b-button variant="secondary" @click="swapTiles" class="mb-2">Swap</b-button>
-          <b-button variant="primary" @click="submitWord" class="mb-2">Submit</b-button>
-        </div>
-      </b-col>
+  <div class="current-player info-section mb-3">
+    <h3>Current Turn: {{ currentPlayerName }}</h3>
+  </div>
+  <div class="player-scores info-section mb-3">
+    Scores:
+    <div v-for="(score, player) in playerScores" :key="player">
+      {{ player }}: {{ score }}
+    </div>
+  </div>
+  <div class="action-buttons">
+    <b-button variant="danger" @click="resign" class="mb-2">Resign</b-button>
+    <b-button variant="secondary" @click="skipTurn" class="mb-2">Skip</b-button>
+    <b-button variant="secondary" @click="swapTiles" class="mb-2">Swap</b-button>
+    <b-button variant="primary" @click="submitWord" class="mb-2">Submit</b-button>
+  </div>
+</b-col>
     </b-row>
     
     <!-- Bottom Row for Tile Rack -->
@@ -63,9 +67,16 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useMutation, useSubscription } from '@vue/apollo-composable';
+import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 import { inject } from 'vue';
+import { computed } from 'vue';
+
+const currentPlayerName = computed(() => {
+  const currentPlayer = gameState.value?.gameStateChanged?.players[gameState.value.gameStateChanged.currentPlayerIndex];
+  return currentPlayer ? currentPlayer.name : 'Loading...';
+});
+
 
 interface User {
   value?: {
@@ -95,20 +106,20 @@ type RackTile = {
 
 
 // GraphQL queries and mutations
-// const GET_GAME_STATE = gql`
-//   query GetGameState($gameId: ID!) {
-//     gameState(gameId: $gameId) {
-//       board
-//       players {
-//         name
-//         hand
-//         score
-//       }
-//       currentPlayerIndex
-//       deck
-//     }
-//   }
-// `;
+const GET_GAME_STATE = gql`
+  query GetGameState($gameId: ID!) {
+    gameState(gameId: $gameId) {
+      board
+      players {
+        name
+        hand
+        score
+      }
+      currentPlayerIndex
+      deck
+    }
+  }
+`;
 
 const GAME_STATE_CHANGED_SUBSCRIPTION = gql`
   subscription GameStateChanged($gameId: ID!) {
@@ -184,10 +195,16 @@ watch(gameState, (newState) => {
     const currentPlayer = newState.gameStateChanged.players.find((player: { name: string; hand: string[]; score: number }) =>
       player.name === user.value?.preferred_username
     );
+    const players = newState.gameStateChanged.players
+    playerScores.value = players.reduce((acc, player) => {
+      acc[player.name] = player.score;
+      return acc;
+    }, {});
+
 
     if (currentPlayer) {
       myTiles.value = currentPlayer.hand.map((letter: string) => ({ letter }));
-      playerScores.value[currentPlayer.name] = currentPlayer.score;
+      // playerScores.value[currentPlayer.name] = currentPlayer.score;
     }
 
 

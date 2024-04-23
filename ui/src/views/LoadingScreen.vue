@@ -16,6 +16,9 @@ import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
+import { inject } from 'vue';
+
+const user = inject('user');
 
 const router = useRouter();
 const route = useRoute();
@@ -66,7 +69,7 @@ watch(result, (newResult) => {
       startGame()
         .then(() => {
           console.log('Game starting...');
-          router.push(`/game/${gameId}`);
+          router.push(`/game/${gameId}/${user.value.preferred_username}`);
         })
         .catch((err) => {
           console.error('Error starting the game:', err);
