@@ -238,10 +238,8 @@ const submitWord = async () => {
   const action = {
     action: 'PLAY',
     playerIndex: currentPlayerIndex,
-    potentialTiles: playedTiles.value.map(t => ({
-      letter: t.letter,
-      position: [t.rowIndex, t.colIndex]
-    })),
+    potentialTiles: playedTiles.value.map(t => t.letter),
+    locations: playedTiles.value.map(t => ([t.rowIndex, t.colIndex]))
   };
 
   try {

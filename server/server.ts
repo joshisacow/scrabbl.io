@@ -140,9 +140,9 @@ startApolloServer().then(() => {
   );
   
   // sample empty route
-  app.use('/', (req, res) => {
-    res.send('Hello World!')
-  })
+  // app.use('/', (req, res) => {
+  //   res.send('Hello World!')
+  // })
 
   app.post(
     "/api/logout", 
