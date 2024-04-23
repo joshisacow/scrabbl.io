@@ -12,6 +12,7 @@ RUN ls -al && npm run build
 # node
 FROM library/node:18-alpine as node
 COPY --from=esbuild /home/node/app/dist/ /home/node/app/dist/
+COPY --from=esbuild /home/node/app/game-logic/legalWords.txt /home/node/app/dist
 COPY --from=esbuild /home/node/app/schema.graphql /home/node/app/
 WORKDIR /home/node/app
 ENTRYPOINT [ "node", "dist/server.js" ]

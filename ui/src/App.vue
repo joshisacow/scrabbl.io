@@ -23,13 +23,15 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 import { getMainDefinition } from "@apollo/client/utilities"
 
+const port = process.env.NODE_ENV === 'production' ? 31001 : 8228
+console.log("server port:", port)
 
 const httpLink = createHttpLink({
-  uri: 'http://127.0.0.1:8228/graphql',
+  uri: `http://127.0.0.1:${port}/graphql`,
 })
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://127.0.0.1:8228/subscriptions",
+    url: `ws://127.0.0.1:${port}/subscriptions`,
   })
 )
 

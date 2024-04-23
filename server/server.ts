@@ -36,6 +36,7 @@ let waitingRooms: Collection
 const app = express()
 const httpServer = createServer(app)
 const port = parseInt(process.env.PORT) || 8228
+const uiPort = parseInt(process.env.UI_PORT) || 8221
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -176,7 +177,7 @@ client.connect().then(() => {
     const params = {
       scope: 'openid profile email',
       nonce: generators.nonce(),
-      redirect_uri: 'http://localhost:8221/api/login-callback', //Do I pick a different port?
+      redirect_uri: `http://127.0.0.1:${uiPort}/api/login-callback`, //Do I pick a different port?
       state: generators.state(),
     }
   

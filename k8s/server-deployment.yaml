@@ -24,3 +24,5 @@ spec:
         env:
         - name: MONGO_URL
           value: mongodb://db
+        - name: UI_PORT
+          value: "31000"
