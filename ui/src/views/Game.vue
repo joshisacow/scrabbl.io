@@ -141,20 +141,32 @@ const PERFORM_ACTION = gql`
 // const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
 const { result: gameState } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
+const { result } = useQuery(GET_GAME_STATE, { gameId });
+
 const board = ref<BoardTile[][]>([]);
 const myTiles = ref<RackTile[]>([]);
-const playerScores = ref<Record<string, number>>({});
-const selectedTile = ref<RackTile | null>(null);
-const selectedIndex = ref<number | null>(null);
-const playedTiles = ref<Array<{ rowIndex: number; colIndex: number; letter: string }>>([]);
-const tileBag = ref<Record<string, number>>({});
+const playerScores = ref({});
+const turnHistory = ref([]);
+const selectedTile = ref<RackTile | null>();
+const selectedIndex = ref<number | null>();
+const playedTiles = ref([]);
+const tileBag = ref({});
+const myState = ref({});
 
 
+
+watch(result, () => {
+  if (result.value && result.value.gameState && !gameState.value) {
+    console.log("result", result.value.gameState);
+    gameState.value = {
+      gameStateChanged: result.value.gameState
+    }
+  }
+})
 
 // Watching game state to update local state
 watch(gameState, (newState) => {
   console.log(gameState.value)
-  console.log(newState)
   if (newState && newState.gameStateChanged) {
     board.value = newState.gameStateChanged.board.map((row: string[]) =>
       row.map((tileString: string) => ({
@@ -181,7 +193,7 @@ watch(gameState, (newState) => {
 
 
     const counts: Record<string, number> = {};
-    newState.gameState.deck.forEach((letter: string) => {
+    newState.gameStateChanged.deck.forEach((letter: string) => {
       if (letter.trim() !== '') {
         counts[letter] = (counts[letter] || 0) + 1;
       }
