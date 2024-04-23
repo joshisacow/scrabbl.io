@@ -1,5 +1,8 @@
 import { GameState, Action, createNewGame, Config } from './game-logic/game-model'
 import { gameStates, users, waitingRooms } from './server'
+import { PubSub } from 'graphql-subscriptions'
+
+const pubsub = new PubSub();
 
 const fetchGameState = async (gameId: string): Promise<GameState> => {
     const state = await gameStates.findOne({ gameId: gameId })
@@ -62,9 +65,18 @@ const resolvers = {
             let message = state.doAction(action)
             console.log(message)
             await saveGameState(gameId, state)
+            pubsub.publish(`gameStateChanged-${gameId}`, { gameStateChanged: state })
             return state
         }
     },
+    Subscription: {
+        gameStateChanged: {
+            subscribe: async (_: any, { gameId }: { gameId: string }) => {
+                console.log("gameStateChanged", gameId)
+                return pubsub.asyncIterator([`gameStateChanged-${gameId}`])
+            }
+        }
+    }
 };
 
 export default resolvers;

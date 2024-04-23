@@ -18,17 +18,34 @@
 <script setup lang="ts">
 import { onMounted, ref, provide } from 'vue'
 import { DefaultApolloClient } from '@vue/apollo-composable'
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
+import { ApolloClient, createHttpLink, InMemoryCache, split } from '@apollo/client/core'
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions"; 
+import { createClient } from "graphql-ws";
+import { getMainDefinition } from "@apollo/client/utilities"
+
 
 const httpLink = createHttpLink({
-  // see https://studio.apollographql.com/public/SpaceX-pxxbxen/variant/current/home
-  // uri: 'https://spacex-production.up.railway.app/',
   uri: 'http://127.0.0.1:8228/graphql',
-  // uri: 'https://flyby-router-demo.herokuapp.com/'
 })
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://127.0.0.1:8228/subscriptions",
+  })
+)
+
+const link = split(
+  // split based on operation type
+  ({ query }) => {
+    const definition = getMainDefinition(query)
+    return definition.kind === "OperationDefinition" && definition.operation === "subscription"
+  },
+  wsLink,
+  httpLink
+)
+
 const cache = new InMemoryCache()
 const apolloClient = new ApolloClient({
-  link: httpLink,
+  link,
   cache,
 })
 

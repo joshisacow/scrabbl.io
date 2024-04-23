@@ -19,6 +19,7 @@
     "bootstrap-vue": "^2.23.1",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
+    "graphql-ws": "^5.16.0",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },

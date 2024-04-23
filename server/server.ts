@@ -3,7 +3,7 @@ import express, { NextFunction, Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import pino from 'pino'
 import expressPinoLogger from 'express-pino-logger'
-import { Collection, Db, MongoClient, ObjectId } from 'mongodb'
+import { Collection, Db, MongoClient } from 'mongodb'
 import session from 'express-session'
 import MongoStore from 'connect-mongo'
 import { Issuer, Strategy, generators } from 'openid-client'
@@ -14,6 +14,10 @@ import gql from "graphql-tag";
 import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 import resolvers from "./resolvers";
 import { readFileSync } from "fs";
 import cors from "cors"
@@ -30,7 +34,7 @@ let waitingRooms: Collection
 
 // set up Express
 const app = express()
-// const server = createServer(app)
+const httpServer = createServer(app)
 const port = parseInt(process.env.PORT) || 8228
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -42,15 +46,36 @@ const typeDefs = gql(
   })
 );
 
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// create WS socker
+const wsServer = new WebSocketServer({ 
+  server: httpServer,
+  path: "/subscriptions",
+});
+const serverCleanup = useServer({ schema }, wsServer)
+
 const server = new ApolloServer({
-  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  schema,
+  plugins: [
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose()
+          }
+        }
+      }
+    }
+  ],
 });
 // Note you must call `start()` on the `ApolloServer`
 // instance before passing the instance to `expressMiddleware`
 async function startApolloServer() {
   await server.start();
 }
-
 
 const DISABLE_SECURITY = process.env.DISABLE_SECURITY
 
@@ -195,7 +220,7 @@ client.connect().then(() => {
 
     // start server
     // server.listen(port)
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
       console.log(`Server is running on port: ${port}`)
     })
     // logger.info(`Game server listening on port ${port}`)
