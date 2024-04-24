@@ -25,7 +25,8 @@ deploy-k8s:
   rules: 
     - when: manual
   script:
-    - KUBECONFIG=$HOME/.kube/config
+    - set KUBECONFIG="C:\Users\amarg\.kube\config"
+    - kubectl delete -f k8s
     - kubectl create -f k8s
 
 e2e-test:
