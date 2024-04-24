@@ -25,6 +25,7 @@ deploy-k8s:
   rules: 
     - when: manual
   script:
+    - KUBECONFIG=$HOME/.kube/config
     - kubectl create -f k8s
 
 e2e-test:
