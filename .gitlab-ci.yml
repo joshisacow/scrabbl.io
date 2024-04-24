@@ -20,7 +20,7 @@ build-ui:
   script:
     - cd ui
     - npm i
-    - docker build -t scrabbl.io-server
+    - docker build -t scrabbl.io-ui .
 
 deploy-k8s:
   stage: deploy
