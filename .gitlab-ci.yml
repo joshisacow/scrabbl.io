@@ -1,0 +1,40 @@
+stages:         
+  - build
+  - deploy
+  - test
+
+
+build-server:
+  stage: build
+  rules:
+    - when: manual
+  script:
+    - cd server
+    - npm i
+    - docker build -t scrabbl.io-server .
+
+build-ui:
+  stage: build
+  rules:
+    - when: manual
+  script:
+    - cd ui
+    - npm i
+    - docker build -t scrabbl.io-server
+
+deploy-k8s:
+  stage: deploy
+  rules: 
+    - when: manual
+  script:
+    - kubectl delete -f k8s
+    - kubectl create -f k8s
+
+e2e-test:
+  stage: test
+  rules:
+    - when: manual
+  script:
+    - echo "hi"
+
+
