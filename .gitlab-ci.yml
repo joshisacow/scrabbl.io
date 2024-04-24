@@ -25,7 +25,7 @@ deploy-k8s:
   rules: 
     - when: manual
   script:
-    - KUBECONFIG="C:\Users\amarg\.kube\config"
+    # - KUBECONFIG="C:\Users\amarg\.kube\config"
     - kubectl config get-contexts
     - kubectl delete -f k8s
     - kubectl create -f k8s
