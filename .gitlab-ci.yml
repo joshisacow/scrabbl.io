@@ -11,6 +11,7 @@ build-server:
   script:
     - cd server
     - npm i
+    - npm ci
     - docker build -t scrabbl.io-server .
 
 build-ui:
@@ -19,6 +20,7 @@ build-ui:
     - when: manual
   script:
     - cd ui
+    - npm ci
     - npm i
     - docker build -t scrabbl.io-ui .
 
