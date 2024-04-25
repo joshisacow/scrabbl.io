@@ -69,7 +69,7 @@ import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-import { inject } from 'vue';
+// import { inject } from 'vue';
 import { computed } from 'vue';
 
 const currentPlayerName = computed(() => {
@@ -85,14 +85,15 @@ export interface User {
 }
 
 
-const user = inject<User>('user', { value: { preferred_username: '' }});
+// const user = inject<User>('user', { value: { preferred_username: '' }});
 
 
 // const router = useRouter();
 const route = useRoute();
 const gameId = route.params.gameId as string;
-
+const userId = route.params.userId as string;
 console.log("gameId: ", gameId)
+console.log("userId: ", userId)
 
 type BoardTile = {
   letter: string | null,
@@ -190,7 +191,7 @@ watch(gameState, (newState) => {
 
     // Update player's tiles and scores
     const currentPlayer = newState.gameStateChanged.players.find((player: { name: string; hand: string[]; score: number }) =>
-      player.name === user.value?.preferred_username
+      player.name === userId
     );
     const players = newState.gameStateChanged.players
     playerScores.value = players.reduce((acc: any, player: any) => {
@@ -292,6 +293,13 @@ const submitWord = async () => {
     return;
   } 
 
+  // console.log(gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name)
+  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
+    console.error("It's not your turn.");
+    return;
+  }
+
+
   const currentPlayerIndex = gameState.value.gameStateChanged.currentPlayerIndex;
   const action = {
     action: 'PLAY',
@@ -316,6 +324,11 @@ async function skipTurn() {
     console.error("Game state is not available.");
     return;
   }
+  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
+    console.error("It's not your turn.");
+    return;
+  }
+
   const action = {
     action: 'SKIP_TURN',
     playerIndex: gameState.value.gameStateChanged.currentPlayerIndex
@@ -335,6 +348,10 @@ async function resign() {
     console.error("Game state is not available.");
     return;
   }
+  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
+    console.error("It's not your turn.");
+    return;
+  }
   const action = {
     action: 'RESIGN',
     playerIndex: gameState.value.gameStateChanged.currentPlayerIndex
@@ -344,6 +361,7 @@ async function resign() {
     await performAction({ gameId, action });
     console.log('Player has resigned');
     // router.push('/'); // Redirect to home or another appropriate route
+
   } catch (error) {
     console.error("Error performing resignation:", error);
   }
@@ -355,19 +373,33 @@ async function swapTiles() {
     console.error("Game state is not available.");
     return;
   }
+  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
+    console.error("It's not your turn.");
+    return;
+  }
+  if (!selectedTile.value) {
+    console.error("No tile selected for swapping.");
+    alert("Please select a tile to swap.");  // Display alert if no tile is selected
+    return;
+  }
+
   const action = {
     action: 'SWAP_TILES',
     playerIndex: gameState.value.gameStateChanged.currentPlayerIndex,
-    potentialTiles: selectedTile.value ? [selectedTile.value.letter] : []
+    potentialTiles: [selectedTile.value.letter] // Ensuring that only one tile is swapped
   };
 
   try {
-    await performAction({ gameId, action });
-    console.log('Tiles swapped successfully');
+    const result = await performAction({ gameId, action });
+    if (result && result.data.doAction) {
+      console.log('Tiles swapped successfully');
+      console.log(gameState);
+    }
   } catch (error) {
     console.error("Error performing tile swap:", error);
   }
 }
+
 
 // Other functions as before
 </script>

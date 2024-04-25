@@ -1,5 +1,9 @@
 <template>
+  
   <b-container class="new-game">
+    <b-navbar-brand href="#">
+        <span>Welcome, {{ user.preferred_username }}</span>
+      </b-navbar-brand>
     <b-row>
       <b-col cols="12" md="8" class="mx-auto">
         <h1>Create or Join a Game</h1>
@@ -142,7 +146,7 @@ const startNewGame = async () => {
       config
     });
     console.log('Game created successfully, game ID:', data.createGame); // Check this log
-    router.push({ name: 'LoadingScreen', params: { gameId: data.createGame } });
+    router.push({ name: 'LoadingScreen', params: { gameId: data.createGame, userId: user.value.preferred_username } });
   } catch (error) {
     console.error('Error creating new game:', error);
   }
@@ -166,7 +170,7 @@ const joinGame = async () => {
     });
     if (data.joinGame) {
       console.error('Successfully joined game:', gameId.value);
-      router.push({ name: 'LoadingScreen', params: { gameId: gameId.value } });
+      router.push({ name: 'LoadingScreen', params: { gameId: gameId.value, userId: user.value.preferred_username } });
     } else {
       console.error('Joining game failed or game is full.');
     }
