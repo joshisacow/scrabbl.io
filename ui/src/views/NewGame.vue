@@ -28,7 +28,7 @@
           <b-button type="submit" variant="primary">Create Game</b-button>
         </b-form>
         <!-- Form for joining an existing game -->
-        <b-form @submit.prevent="joinGame">
+        <b-form @submit.prevent="joinGame" class="mt-4">
           <b-form-group label="Game ID">
             <b-form-input v-model="gameId" placeholder="Enter Game ID"></b-form-input>
           </b-form-group>
