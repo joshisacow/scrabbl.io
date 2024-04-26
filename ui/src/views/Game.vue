@@ -1,4 +1,10 @@
 <template>
+  <b-modal v-model="showWinnerModal" ok-only @ok="redirectToNewGame">
+    <template #modal-title>
+      Game Over
+    </template>
+    {{ winnerMessage }}
+  </b-modal>
   <b-container fluid class="game-wrapper">
     <!-- Top Row for Game Board, Info, and Actions -->
     <b-row>
@@ -66,11 +72,17 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
 // import { inject } from 'vue';
 import { computed } from 'vue';
+
+const showWinnerModal = ref(false);
+const winnerMessage = ref('');
+
+
+const router = useRouter();
 
 const currentPlayerName = computed(() => {
   const currentPlayer = gameState.value?.gameStateChanged?.players[gameState.value.gameStateChanged.currentPlayerIndex];
@@ -172,6 +184,17 @@ watch(result, () => {
     }
   }
 })
+
+watch(gameState, (newState) => {
+  console.log("New Player length:", newState?.gameStateChanged?.players.length)
+  // console.log("Old Player length:", oldState?.gameStateChanged?.players.length)
+  if (newState) {
+    if (newState.gameStateChanged.players.length === 1) {
+      handlePlayerResignation(newState);
+    }
+  }
+});
+
 
 // Watching game state to update local state
 watch(gameState, (newState) => {
@@ -348,10 +371,7 @@ async function resign() {
     console.error("Game state is not available.");
     return;
   }
-  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
-    console.error("It's not your turn.");
-    return;
-  }
+
   const action = {
     action: 'RESIGN',
     playerIndex: gameState.value.gameStateChanged.currentPlayerIndex
@@ -359,13 +379,34 @@ async function resign() {
 
   try {
     await performAction({ gameId, action });
-    console.log('Player has resigned');
-    // router.push('/'); // Redirect to home or another appropriate route
+    // Determine the winner
+    const remainingPlayers = gameState.value.gameStateChanged.players.filter((p: any) => p.name !== userId);
+    const highestScore = Math.max(...remainingPlayers.map((p: any) => p.score));
+    const winner = remainingPlayers.find((p: any) => p.score === highestScore);
 
+    winnerMessage.value = `${winner.name} wins the game!`;
+    showWinnerModal.value = true;
+
+    console.log('Player has resigned');
   } catch (error) {
     console.error("Error performing resignation:", error);
   }
 }
+
+function redirectToNewGame() {
+  router.push({ name: 'NewGameContinued', params: { userId: userId }  });
+}
+
+function handlePlayerResignation(newState: any) {
+  console.log('Player has resigned');
+  if (newState.gameStateChanged.players.length === 1) {
+    const winner = newState.gameStateChanged.players[0];
+    alert(`${winner.name} wins the game!`);
+    router.push({ name: 'NewGameContinued', params: { userId: userId } });
+  }
+}
+
+
 
 // Swap Tiles
 async function swapTiles() {

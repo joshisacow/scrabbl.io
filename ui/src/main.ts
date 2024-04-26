@@ -11,6 +11,7 @@ import Game from './views/Game.vue'
 import Login from './views/Login.vue'
 import NewGame from './views/NewGame.vue'
 import LoadingScreen from './views/LoadingScreen.vue'
+import NewGameContinued from './views/NewGameContinued.vue'
 
 
 const routes = [
@@ -38,7 +39,13 @@ const routes = [
     name: 'LoadingScreen',
     component: LoadingScreen,
     props: true
-  }
+  },
+  {
+    path: "/new-game-continued/:userId",
+    name: "NewGameContinued",
+    component: NewGameContinued,
+    props: true    
+  },
 ]
 
 const router = createRouter({
