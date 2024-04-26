@@ -79,6 +79,7 @@ async function startApolloServer() {
 }
 
 const DISABLE_SECURITY = process.env.DISABLE_SECURITY
+console.log("DISABLE_SECURITY", DISABLE_SECURITY)
 
 const passportStrategies = [
   ...(DISABLE_SECURITY ? ["disable-security"] : []),

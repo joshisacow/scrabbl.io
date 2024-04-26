@@ -25,8 +25,7 @@
               :class="{ 'placed-tile': tile.isPlaced, [tile.type]: true }"
               @click="placeOrPickupTile(rowIndex, colIndex)">
               <span v-if="tile.letter" class="tile-letter">{{ tile.letter }}</span>
-              <span v-if="!tile.letter && tile.type !== 'normal' && tile.type !== 'STAR'" class="tile-score">{{ tile.type }}</span>
-              <span v-if="tile.type === 'STAR'"><font-awesome-icon :icon="['fas', 'star']" /></span>
+              <span v-if="!tile.letter && tile.type !== 'normal'" class="tile-score">{{ tile.type }}</span>
             </div>
           </div>
         </div>
