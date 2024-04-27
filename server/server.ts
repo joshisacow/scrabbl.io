@@ -29,7 +29,6 @@ console.log(mongoUrl)
 const client = new MongoClient(mongoUrl)
 let db: Db
 let gameStates: Collection
-let users: Collection
 let waitingRooms: Collection
 
 // set up Express
@@ -97,9 +96,11 @@ app.use(expressPinoLogger({ logger }))
 
 // set up CORS
 // app.use(cors({
-//   origin: "http://localhost:" + port,
+//   origin: true,
 //   credentials: true,
 // }))
+
+// ["http://localhost:" + uiPort, "http://127.0.0.1:" + uiPort]
 
 // set up session
 const sessionMiddleware = session({
@@ -131,6 +132,14 @@ passport.deserializeUser((user, done) => {
   done(null, user)
 })
 
+// const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+//   console.log("request", req, req.isAuthenticated())
+//   if (req.isAuthenticated()) {
+//     return next();
+//   }
+//   res.status(401).json({ message: 'Unauthorized' });
+// };
+
 
 // app routes
 startApolloServer().then(() => {
@@ -140,6 +149,7 @@ startApolloServer().then(() => {
     express.json(),
     expressMiddleware(server),
   );
+
   
   // sample empty route
   // app.use('/', (req, res) => {
@@ -169,7 +179,6 @@ client.connect().then(() => {
   logger.info('connected successfully to MongoDB')
   db = client.db("test")
   gameStates = db.collection('game-states')
-  users = db.collection('users')
   waitingRooms = db.collection('waiting-rooms')
 
   Issuer.discover("https://coursework.cs.duke.edu/").then(issuer => {
@@ -230,4 +239,4 @@ client.connect().then(() => {
   })
 })
 
-export { gameStates, users, waitingRooms }
+export { gameStates, waitingRooms }

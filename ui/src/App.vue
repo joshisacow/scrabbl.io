@@ -27,6 +27,7 @@ console.log("server port:", port)
 
 const httpLink = createHttpLink({
   uri: `http://127.0.0.1:${port}/graphql`,
+  // credentials: 'include',
 })
 const wsLink = new GraphQLWsLink(
   createClient({

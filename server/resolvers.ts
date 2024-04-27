@@ -1,5 +1,5 @@
 import { GameState, Action, createNewGame, Config } from './game-logic/game-model'
-import { gameStates, users, waitingRooms } from './server'
+import { gameStates, waitingRooms } from './server'
 import { PubSub } from 'graphql-subscriptions'
 
 const pubsub = new PubSub();

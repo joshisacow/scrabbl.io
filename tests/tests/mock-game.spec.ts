@@ -32,11 +32,15 @@ test('test', async ({ context }) => {
     if (currentTurnPlayer === 'test2') {
         await expect(page1.getByRole('heading')).toContainText('Current Turn: test2');
         await page2.getByRole('button', { name: 'Skip' }).click();
+        await page1.reload();
+        await page2.reload();
         await expect(page1.getByRole('heading')).toContainText('Current Turn: test1');
         await expect(page2.getByRole('heading')).toContainText('Current Turn: test1');
     } else {
         await expect(page1.getByRole('heading')).toContainText('Current Turn: test1');
         await page1.getByRole('button', { name: 'Skip' }).click();
+        await page1.reload();
+        await page2.reload();
         await expect(page1.getByRole('heading')).toContainText('Current Turn: test2');
         await expect(page2.getByRole('heading')).toContainText('Current Turn: test2');
     }
