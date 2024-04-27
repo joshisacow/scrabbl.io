@@ -35,6 +35,10 @@ e2e-test:
   rules:
     - when: manual
   script:
-    - echo "hi"
+    - cd tests  
+    - npm install @playwright/test
+    - npx playwright install
+    - npx playwright test --project webkit
+
 
 
