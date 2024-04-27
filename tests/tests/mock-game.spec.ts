@@ -20,6 +20,8 @@ test('test', async ({ context }) => {
     await page2.getByRole('button', { name: 'Join Game' }).click();
     await page1.reload();
     await page2.reload();
+    
+    await page2.waitForTimeout(2000);
 
     const currentTurn = await page2.getByRole('heading')
     if (!currentTurn) {
