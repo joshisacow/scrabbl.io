@@ -35,7 +35,10 @@ e2e-test:
   rules:
     - when: manual
   script:
-    - cd tests/tests
+    - cd tests/tests  # Adjust path as necessary
+    - npx playwright install  # Ensure all necessary browsers are installed
+    - npx playwright test mock-game.spec.ts --reporter=html
     - npx playwright show-report
+
 
 
