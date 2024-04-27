@@ -35,6 +35,7 @@ e2e-test:
   rules:
     - when: manual
   script:
-    - echo "hi"
+    - cd tests/tests
+    - npx playwright show-report
 
 
