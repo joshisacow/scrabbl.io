@@ -84,9 +84,6 @@ const router = useRouter();
 
 const currentPlayerName = computed(() => {
   const currentPlayer = gameState.value?.gameStateChanged?.players[gameState.value.gameStateChanged.currentPlayerIndex];
-  if (currentPlayer && userId === currentPlayer.name) {
-    return "Your Turn";
-  }
   return currentPlayer ? currentPlayer.name : 'Loading...';
 });
 
