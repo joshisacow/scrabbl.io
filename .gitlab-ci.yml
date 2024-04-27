@@ -37,7 +37,7 @@ e2e-test:
   script:
     # - npm install
     - cd tests  
-    - nmp install @playwright/test
+    - npm install @playwright/test
     - npx playwright install
     - npx playwright test --project webkit
     - npx playwright show-report
