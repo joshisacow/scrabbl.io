@@ -74,7 +74,6 @@ import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useMutation, useSubscription } from '@vue/apollo-composable';
 import gql from 'graphql-tag';
-// import { inject } from 'vue';
 import { computed } from 'vue';
 
 const showWinnerModal = ref(false);
@@ -85,8 +84,12 @@ const router = useRouter();
 
 const currentPlayerName = computed(() => {
   const currentPlayer = gameState.value?.gameStateChanged?.players[gameState.value.gameStateChanged.currentPlayerIndex];
+  if (currentPlayer && userId === currentPlayer.name) {
+    return "Your Turn";
+  }
   return currentPlayer ? currentPlayer.name : 'Loading...';
 });
+
 
 
 export interface User {
@@ -95,11 +98,6 @@ export interface User {
   }
 }
 
-
-// const user = inject<User>('user', { value: { preferred_username: '' }});
-
-
-// const router = useRouter();
 const route = useRoute();
 const gameId = route.params.gameId as string;
 const userId = route.params.userId as string;
@@ -109,7 +107,7 @@ console.log("userId: ", userId)
 type BoardTile = {
   letter: string | null,
   type: string,
-  isPlaced: boolean // Add a new property to track if the tile has been placed
+  isPlaced: boolean 
 }
 
 type RackTile = {
@@ -117,7 +115,6 @@ type RackTile = {
 }
 
 
-// GraphQL queries and mutations
 const GET_GAME_STATE = gql`
   query GetGameState($gameId: ID!) {
     gameState(gameId: $gameId) {
@@ -159,9 +156,6 @@ const PERFORM_ACTION = gql`
   }
 `;
 
-// Reactive state
-// Use the queries and mutations
-// const { result: gameState, loading: gameStateLoading, error: gameStateError } = useQuery(GET_GAME_STATE, { gameId });
 const { result: gameState } = useSubscription(GAME_STATE_CHANGED_SUBSCRIPTION, { gameId });
 const { mutate: performAction } = useMutation(PERFORM_ACTION);
 const { result } = useQuery(GET_GAME_STATE, { gameId });
@@ -186,7 +180,6 @@ watch(result, () => {
 
 watch(gameState, (newState) => {
   console.log("New Player length:", newState?.gameStateChanged?.players.length)
-  // console.log("Old Player length:", oldState?.gameStateChanged?.players.length)
   if (newState) {
     if (newState.gameStateChanged.players.length === 1) {
       handlePlayerResignation(newState);
@@ -195,7 +188,6 @@ watch(gameState, (newState) => {
 });
 
 
-// Watching game state to update local state
 watch(gameState, (newState) => {
   console.log(gameState.value)
   if (newState && newState.gameStateChanged) {
@@ -211,7 +203,6 @@ watch(gameState, (newState) => {
 
     console.log("Board:", board.value);
 
-    // Update player's tiles and scores
     const currentPlayer = newState.gameStateChanged.players.find((player: { name: string; hand: string[]; score: number }) =>
       player.name === userId
     );
@@ -224,9 +215,7 @@ watch(gameState, (newState) => {
 
     if (currentPlayer) {
       myTiles.value = currentPlayer.hand.map((letter: string) => ({ letter }));
-      // playerScores.value[currentPlayer.name] = currentPlayer.score;
     }
-
 
 
     const counts: Record<string, number> = {};
@@ -237,26 +226,15 @@ watch(gameState, (newState) => {
     });
     tileBag.value = counts;
 
-
-    // Example to update turn history
-    // Adjust based on your actual data structure and needs
-    // turnHistory.value = newState.gameStateChanged.players.map(player => ({
-    //   player: player.name,
-    //   turn: player.currentTurn,  // Example property
-    //   word: player.lastWord,    // Example property
-    //   score: player.score
-    // }));
-
     console.log("My tiles:", myTiles.value);
     console.log("Player scores:", playerScores.value);
   }
 });
 
 
-// Functions for tile interaction
 function selectTileFromRack(tile: RackTile, index: number) {
   if (selectedTile.value === tile) {
-    selectedTile.value = null; // Deselect if the same tile is clicked again
+    selectedTile.value = null; 
     selectedIndex.value = null;
   } else {
     selectedTile.value = tile;
@@ -268,13 +246,12 @@ function placeOrPickupTile(rowIndex: number, colIndex: number) {
   const boardTile = board.value[rowIndex][colIndex];
   if (selectedTile.value && !boardTile.letter) {
     boardTile.letter = selectedTile.value.letter;
-    boardTile.isPlaced = true; // Set to true when placed
+    boardTile.isPlaced = true; 
     myTiles.value.splice(selectedIndex.value ?? 0, 1);
     playedTiles.value.push({ rowIndex, colIndex, letter: boardTile.letter });
     selectedTile.value = null;
     selectedIndex.value = null;
   } else if (!selectedTile.value && boardTile.letter && boardTile.isPlaced) {
-    // This checks if the tile was previously placed in the same turn before picking it up
     const playedTileIndex = playedTiles.value.findIndex((pt: { rowIndex: number, colIndex: number }) => pt.rowIndex === rowIndex && pt.colIndex === colIndex);
     if (playedTileIndex !== -1) {
       playedTiles.value.splice(playedTileIndex, 1);
@@ -296,13 +273,11 @@ function shuffleTiles() {
 function resetPlayedTiles() {
   playedTiles.value.forEach((pt: { rowIndex: number, colIndex: number }) => {
     const tile = board.value[pt.rowIndex][pt.colIndex];
-    // Put the tile back in the rack
     myTiles.value.push({ letter: tile.letter as string }); 
-    // Clear the tile from the board
     tile.letter = null;
-    tile.isPlaced = false; // Ensure isPlaced is reset
+    tile.isPlaced = false; 
   });
-  playedTiles.value = []; // Clear the played tiles
+  playedTiles.value = []; 
 }
 
 
@@ -315,9 +290,9 @@ const submitWord = async () => {
     return;
   } 
 
-  // console.log(gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name)
   if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
     console.error("It's not your turn.");
+    alert("It's not your turn.");
     return;
   }
 
@@ -333,14 +308,12 @@ const submitWord = async () => {
   try {
     await performAction({ gameId, action });  // Ensure variables are correctly referenced
     console.log('Word submitted successfully');
-    // After successful submission, clear played tiles
     playedTiles.value = [];
   } catch (error) {
     console.error("Error performing action:", error);
   }
 };
 
-// Skip Turn
 async function skipTurn() {
   if (!gameState.value?.gameStateChanged) {
     console.error("Game state is not available.");
@@ -348,6 +321,7 @@ async function skipTurn() {
   }
   if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
     console.error("It's not your turn.");
+    alert("It's not your turn.");
     return;
   }
 
@@ -364,10 +338,14 @@ async function skipTurn() {
   }
 }
 
-// Resign Game
 async function resign() {
   if (!gameState.value?.gameStateChanged) {
     console.error("Game state is not available.");
+    return;
+  }
+  if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
+    console.error("It's not your turn.");
+    alert("It's not your turn.");
     return;
   }
 
@@ -378,7 +356,6 @@ async function resign() {
 
   try {
     await performAction({ gameId, action });
-    // Determine the winner
     const remainingPlayers = gameState.value.gameStateChanged.players.filter((p: any) => p.name !== userId);
     const highestScore = Math.max(...remainingPlayers.map((p: any) => p.score));
     const winner = remainingPlayers.find((p: any) => p.score === highestScore);
@@ -405,9 +382,6 @@ function handlePlayerResignation(newState: any) {
   }
 }
 
-
-
-// Swap Tiles
 async function swapTiles() {
   if (!gameState.value?.gameStateChanged) {
     console.error("Game state is not available.");
@@ -415,18 +389,19 @@ async function swapTiles() {
   }
   if (gameState.value.gameStateChanged.players[gameState.value.gameStateChanged.currentPlayerIndex].name !== userId) {
     console.error("It's not your turn.");
+    alert("It's not your turn.");
     return;
   }
   if (!selectedTile.value) {
     console.error("No tile selected for swapping.");
-    alert("Please select a tile to swap.");  // Display alert if no tile is selected
+    alert("Please select a tile to swap.");  
     return;
   }
 
   const action = {
     action: 'SWAP_TILES',
     playerIndex: gameState.value.gameStateChanged.currentPlayerIndex,
-    potentialTiles: [selectedTile.value.letter] // Ensuring that only one tile is swapped
+    potentialTiles: [selectedTile.value.letter] 
   };
 
   try {
@@ -439,9 +414,6 @@ async function swapTiles() {
     console.error("Error performing tile swap:", error);
   }
 }
-
-
-// Other functions as before
 </script>
 
 
@@ -535,6 +507,7 @@ async function swapTiles() {
   }
 
   .board-tile {
+    font-size: 8px;
     width: 5vw;
     height: 5vw;
   }
