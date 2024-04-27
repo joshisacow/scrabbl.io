@@ -35,7 +35,7 @@ e2e-test:
   rules:
     - when: manual
   script:
-    - cd tests/tests  # Adjust path as necessary
+    - cd tests  # Adjust path as necessary
     - npx playwright install  # Ensure all necessary browsers are installed
     - npx playwright test --project webkit
     - npx playwright show-report
